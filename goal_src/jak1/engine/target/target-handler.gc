@@ -480,8 +480,8 @@
                    (or (< (-> self fact health) 3.0) (< (-> self fact eco-pill) 50.0)))
           ;; increment health pip
           (+! (-> self fact eco-pill) 1.0)
-          ;; if we went negative, decrement big health via attack
-          (when (>= (-> self fact eco-pill) 50.0)
+          ;; if we hit 50, increment big health
+          (when (and (< (-> self fact health) 3.0) (>= (-> self fact eco-pill) 50.0))
             (+! (-> self fact health) 1.0)
             (set! (-> self fact eco-pill) 0.0))
           )
