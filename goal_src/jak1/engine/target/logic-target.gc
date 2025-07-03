@@ -608,6 +608,20 @@
   (level-setup)
   (set! (-> self control unknown-vector10 quad) (-> self control transv quad))
   ((-> self control unknown-surface01 active-hook))
+  ;; mod change - health drain if no blue eco
+  (when (and (not (logtest? (-> *target* state-flags) (state-flags being-attacked dying)))
+             (not (and (= (-> self fact eco-type) (pickup-type eco-blue)) 
+                       (< 0.0 (-> self fact eco-level)))))
+    ;; only do this every X ticks
+    (when (zero? (mod (current-time) 100))
+      ;; decrement health pip
+      (-! (-> self fact eco-pill) 1.0)
+      ;; if we went negative, decrement big health via attack
+      (when (< (-> self fact eco-pill) 0.0)
+        (send-event self 'attack #f (static-attack-info ((mode 'generic))))
+        (set! (-> self fact eco-pill) 49.0))
+      )
+    )
   (cond
     ((logtest? (-> self control status) (cshape-moving-flags onsurf))
      (set-time! (-> self control unknown-dword11))
