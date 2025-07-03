@@ -380,8 +380,18 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (draw-xyz jak 0.0 3.0 3.0))
 
 ;; Helper functions for spawning orbs (used by orb placer in debug mode)
+(define *last-vent* (the process #f))
+(defun spawn-ventblue ((vec vector) (orb-req float))
+  (let ((sv-64 (the process #f)))
+    (set! sv-64 (get-process *default-dead-pool* ventblue #x4000))
+    (let ((t9-4 (method-of-type ventblue activate)))
+      (t9-4 (the-as ventblue sv-64) *active-pool* 'ventblue (the-as pointer #x70004000)))
+    (run-now-in-process sv-64 ventblue-init-by-other vec orb-req)
+    ;; return handle to the orb
+    (process->handle sv-64))
+  )
 
-(defun spawn-money ((vec vector) (amount float) (bob? symbol))
+(defun spawn-skill ((vec vector) (amount float) (bob? symbol))
   (let ((fax (new 'static 'fact-info)))
     (set! (-> fax pickup-type) (pickup-type money))
     (set! (-> fax pickup-amount) amount)
@@ -394,5 +404,5 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ;; return handle to the orb
       (process->handle proc))))
 
-(defun spawn-money-meters ((x float) (y float) (z float) (amount float) (bob? symbol))
-  (let ((vec (new 'stack-no-clear 'vector))) (set-vector-meters! vec x y z) (spawn-money vec amount bob?)))
+(defun spawn-skill-meters ((x float) (y float) (z float) (amount float) (bob? symbol))
+  (let ((vec (new 'stack-no-clear 'vector))) (set-vector-meters! vec x y z) (spawn-skill vec amount bob?)))

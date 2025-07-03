@@ -20,7 +20,7 @@
 
 (define-extern runs-on-eco-pickup (function pickup-type process-tree none))
 
-(define-extern orb-placer-list-maintenace (function symbol none))
+(define-extern orb-placer-list-maintenance (function symbol none))
 
 (declare-type vent process-drawable)
 
@@ -757,7 +757,7 @@
     (behavior ()
       ;; refresh orb-placer list in debug mode
       (when *debug-segment*
-        (orb-placer-list-maintenace #t))))
+        (orb-placer-list-maintenance #t))))
 
 (defmethod initialize ((this money))
   (stack-size-set! (-> this main-thread) 192) ;; og:preserve-this hack increased from 128
@@ -1744,8 +1744,9 @@
 (defstate vent-wait-for-touch (vent)
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
-      (if (and (or (= message 'touch) (= message 'attack))
-               (let ((a1-1 (new 'stack-no-clear 'event-message-block)))
+      (when (and (or (= message 'touch) (= message 'attack)))
+        (send-event proc 'venting (-> self fact pickup-type)) ;; for health regain
+        (if (and (let ((a1-1 (new 'stack-no-clear 'event-message-block)))
                  (set! (-> a1-1 from) self)
                  (set! (-> a1-1 num-params) 2)
                  (set! (-> a1-1 message) 'get-pickup)
@@ -1754,7 +1755,8 @@
                  (runs-on-eco-pickup (-> self fact pickup-type) self)
                  (and (= (send-event-function proc a1-1) #t)
                       (or (logtest? (-> self fact options) (fact-options powerup)) (send-event proc 'powerup)))))
-        (go vent-pickup (process->handle proc)))
+          (go vent-pickup (process->handle proc)))
+        )
       (vent-standard-event-handler proc argc message block))
   :code
     (behavior ()
@@ -1762,6 +1764,7 @@
         (let ((a0-0 (-> self part))
               (a1-0 (-> self root trans))
               (gp-0 (-> self sound)))
+          (if ((-> self block-func) self) (go vent-blocked))
           (if (and (nonzero? a0-0) (-> self show-particles)) (spawn a0-0 a1-0))
           (if (nonzero? gp-0) (update! gp-0)))
         (suspend))))
@@ -1827,12 +1830,79 @@
   (initialize this arg0 (pickup-type eco-red))
   (none))
 
-(deftype ventblue (vent) ())
+(deftype ventblue (vent) 
+  ((orb-req float) ;; number of orbs to unblock vent
+    )
+  )
 
 
 (defmethod init-from-entity! ((this ventblue) (arg0 entity-actor))
   (initialize this arg0 (pickup-type eco-blue))
   (none))
+
+(defbehavior ventblue-init-by-other ventblue ((arg1 vector) (arg2 float))
+  (stack-size-set! (-> self main-thread) 128)
+  (logior! (-> self mask) (process-mask actor-pause))
+  (let ((s3-0 (new 'process 'collide-shape self (collide-list-enum hit-by-player))))
+    (let ((s2-0 (new 'process 'collide-shape-prim-sphere s3-0 (the-as uint 0))))
+      (set! (-> s2-0 prim-core collide-as) (collide-kind powerup))
+      (set! (-> s2-0 collide-with) (collide-kind target))
+      (set-vector! (-> s2-0 local-sphere) 0.0 4915.2 0.0 6553.6)
+      (set-root-prim! s3-0 s2-0))
+    (set! (-> s3-0 nav-radius) (* 0.75 (-> s3-0 root-prim local-sphere w)))
+    (backup-collide-with-as s3-0)
+    (set! (-> self root) s3-0))
+  (set! (-> self root trans quad) (-> arg1 quad))
+  (update-transforms! (-> self root))
+  (set! (-> self root pause-adjust-distance) 409600.0)
+  (set! (-> self fact) (new 'process 'fact-info self (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc)))
+  (set! (-> self block-func) (the-as (function vent symbol) true-func))
+  (set! (-> self orb-req) arg2)
+  (case (-> self fact pickup-type)
+    (((pickup-type eco-blue))
+     (set! (-> self part) (create-launch-control (-> *part-group-id-table* 44) self))
+     (set! (-> self collect-effect) (-> *part-group-id-table* 67))
+     (set! (-> self collect-effect2) (-> *part-group-id-table* 43))
+     (set! (-> self sound) (new 'process 'ambient-sound 'eco-bg-blue (-> self root trans))))
+    (((pickup-type eco-red))
+     (set! (-> self part) (create-launch-control (-> *part-group-id-table* 50) self))
+     (set! (-> self collect-effect) (-> *part-group-id-table* 69))
+     (set! (-> self collect-effect2) (-> *part-group-id-table* 49))
+     (set! (-> self sound) (new 'process 'ambient-sound 'eco-bg-red (-> self root trans))))
+    (((pickup-type eco-green))
+     (set! (-> self part) (create-launch-control (-> *part-group-id-table* 62) self))
+     (set! (-> self collect-effect) (-> *part-group-id-table* 66))
+     (set! (-> self collect-effect2) (-> *part-group-id-table* 61))
+     (set! (-> self sound) (new 'process 'ambient-sound 'eco-bg-green (-> self root trans))))
+    (((pickup-type eco-yellow))
+     (set! (-> self part) (create-launch-control (-> *part-group-id-table* 52) self))
+     (set! (-> self collect-effect) (-> *part-group-id-table* 68))
+     (set! (-> self collect-effect2) (-> *part-group-id-table* 57))
+     (set! (-> self sound) (new 'process 'ambient-sound 'eco-bg-yellow (-> self root trans)))))
+  ;; (set! (-> self blocker) (entity-actor-lookup (-> self entity) 'alt-actor 0))
+  ;; (when (-> self blocker)
+  (logior! (-> self fact options) (fact-options vent-blocked))
+  (set! (-> self block-func)
+        (lambda ((arg0 ventblue))
+          (< (-> *game-info* money) (-> arg0 orb-req)))) ;; blocked until you reach orb threshold
+  ;; )
+  (set! (-> self show-particles) #t)
+  (when (logtest? (-> self fact options) (fact-options vent-blocked))
+    ;; (when (logtest? (-> self fact options) (fact-options vent-valve))
+    ;;   (case (-> self fact pickup-type)
+    ;;     (((pickup-type eco-blue))
+    ;;      (set! (-> self block-func)
+    ;;            (the-as (function vent symbol) (lambda () (not (task-complete? *game-info* (game-task jungle-eggtop)))))))
+    ;;     (((pickup-type eco-red))
+    ;;      (set! (-> self block-func)
+    ;;            (the-as (function vent symbol) (lambda () (not (task-complete? *game-info* (game-task red-eggtop)))))))
+    ;;     (((pickup-type eco-yellow))
+    ;;      (set! (-> self block-func)
+    ;;            (the-as (function vent symbol) (lambda () (not (task-complete? *game-info* (game-task snow-eggtop))))))))
+    ;;   (process-spawn ecovalve (-> self block-func) :from *pickup-dead-pool* :to self))
+    (if ((-> self block-func) self) (go vent-blocked)))
+  (go vent-wait-for-touch)
+  )
 
 (deftype ecovent (vent) ())
 
