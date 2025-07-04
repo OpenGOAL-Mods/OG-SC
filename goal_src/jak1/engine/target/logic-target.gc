@@ -622,6 +622,23 @@
         (set! (-> self fact eco-pill) 49.0))
       )
     )
+  ;; mod change - tweak speed based on HP
+  (let ((scale (cond
+                ((and (>= (-> self fact health) 3.0) (>= (-> self fact eco-pill) 50.0)) 1.0) ;; 4HP - 100%
+                ((>= (-> self fact health) 3.0) 0.75) ;; 3HP - 75%
+                ((>= (-> self fact health) 2.0) 0.5) ;; 2HP - 50%
+                ((>= (-> self fact health) 1.0) 0.25) ;; 1HP - 25%
+                )))
+    (set! (-> *walk-mods* target-speed) (* scale 40960.0))
+    (set! (-> *double-jump-mods* target-speed) (* scale 32768.0))
+    (set! (-> *jump-mods* target-speed) (* scale 40960.0))
+    (set! (-> *jump-attack-mods* target-speed) (* scale 24576.0))
+    (set! (-> *attack-mods* target-speed) (* scale 40960.0))
+    (set! (-> *forward-high-jump-mods* target-speed) (* scale 45056.0))
+    (set! (-> *jump-attack-mods* target-speed) (* scale 24576.0))
+    (set! (-> *TARGET-bank* wheel-flip-dist) (* scale (meters 17.3)))
+    (set! (-> *TARGET-bank* wheel-flip-height) (* scale (meters 3.52)))
+    )
   (cond
     ((logtest? (-> self control status) (cshape-moving-flags onsurf))
      (set-time! (-> self control unknown-dword11))
