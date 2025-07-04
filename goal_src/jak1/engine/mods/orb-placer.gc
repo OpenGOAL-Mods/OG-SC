@@ -236,6 +236,8 @@
 ;; called from run-every-frame to ensure orb-placer is spawned/killed
 (define *orb-offset-tmp-vec* (new 'global 'vector))
 (define *orb-placer-hud-str* (new 'global 'string 128 (the string #f)))
+(define *square-hold-time* (the time-frame #f))
+(define *circle-hold-time* (the time-frame #f))
 (defun orb-placer-maintenance ()
   (when *debug-segment*
     (orb-placer-list-maintenance #f)
@@ -257,7 +259,7 @@
               )
             )
           )
-        (draw-string-xy *orb-placer-hud-str* buf 510 2 (font-color red) (font-flags right shadow kerning))
+        (draw-string-xy *orb-placer-hud-str* buf 508 2 (font-color red) (font-flags right shadow kerning))
         )
       )
     (cond
@@ -294,6 +296,9 @@
                       ;; unlock freecam if no target
                       (when (and (not *target*) (not (send-event *camera* 'query-state cam-free-floating)))
                         (send-event *camera* 'change-state cam-free-floating 0))
+                      ;; clear these
+                      (set! *square-hold-time* (the time-frame #f)) ;; make sure square not considered held
+                      (set! *circle-hold-time* (the time-frame #f)) ;; make sure circle not considered held
                       )
                     (else ;; active
                       ;; make sure target is grabbed
@@ -303,54 +308,89 @@
                       (when (and (not *target*) (not (send-event *camera* 'query-state cam-fixed)))
                         (send-event *camera* 'change-state cam-fixed 0))
                       ;; if we have an orb selected and the handle is nonzero...
-                      (when (and (>= *orb-placer-selected-idx* 0) (nonzero? (-> *orb-placer-orbs* *orb-placer-selected-idx*)))
-                        (let ((orb (the ventblue (handle->process (-> *orb-placer-orbs* *orb-placer-selected-idx*))))
-                              (moved? #f))
-                          (when orb
-                            ;; highlight it
-                            (orb-placer-highlight orb #t)
-                            ;; respond to controller input
-                            ;; X/Z based on camera
-                            (when (nonzero? (-> pad stick0-speed))
-                              (set! (-> vec x) (sin (-> pad stick0-dir)))
-                              (set! (-> vec y) 0.0)
-                              (set! (-> vec z) (cos (-> pad stick0-dir)))
-                              (set! (-> vec w) 0.0)
-                              ;; camera magic
-                              (vector-matrix*! vec vec (matrix-local->world #t #f))
-                              (vector-flatten! vec vec (-> *camera* local-down))
-                              (vector-float*! vec vec (* (-> pad stick0-speed) 512.0)) ;; TODO scale?
-                              ;; actually move orb
-                              (vector+! (-> orb root trans) (-> orb root trans) vec)
-                              ;;  (vector+! (-> orb base) (-> orb base) vec))
-                              (true! moved?)
-                              )
-                            (cond
-                              ((or (cpad-pressed? 0 square) (and (zero? (/ (current-time) 50)) (cpad-hold? 0 square)))
-                               (-! (-> orb orb-req) 1.0))
-                              ((or (cpad-pressed? 0 circle) (and (zero? (/ (current-time) 50)) (cpad-hold? 0 circle)))
-                               (-! (-> orb orb-req) -1.0))
-                              )
-                            (cond
-                              ;; fine tune/axis-aligned X/Z
-                              ((cpad-pressed? 0 down) (true! moved?) (+! (-> orb root trans z) (meters 0.03))) ;; (+! (-> orb base z) (meters 0.03)))
-                              ((cpad-pressed? 0 up) (true! moved?) (+! (-> orb root trans z) (meters -0.03))) ;; (+! (-> orb base z) (meters -0.03)))
-                              ((cpad-pressed? 0 right) (true! moved?) (+! (-> orb root trans x) (meters 0.03))) ;; (+! (-> orb base x) (meters 0.03)))
-                              ((cpad-pressed? 0 left) (true! moved?) (+! (-> orb root trans x) (meters -0.03))) ;; (+! (-> orb base x) (meters -0.03)))
-                              ;; Y (up/down)
-                              ((cpad-hold? 0 r2) (true! moved?) (+! (-> orb root trans y) (meters 0.08))) ;; (+! (-> orb base y) (meters 0.08)))
-                              ((cpad-hold? 0 l2) (true! moved?) (+! (-> orb root trans y) (meters -0.08))) ;; (+! (-> orb base y) (meters -0.08)))
-                              ((cpad-pressed? 0 r1) (true! moved?) (+! (-> orb root trans y) (meters 0.03))) ;; (+! (-> orb base y) (meters 0.03)))
-                              ((cpad-pressed? 0 l1) (true! moved?) (+! (-> orb root trans y) (meters -0.03))) ;; (+! (-> orb base y) (meters -0.03)))
-                              )
+                      (cond
+                        ((and (>= *orb-placer-selected-idx* 0) (nonzero? (-> *orb-placer-orbs* *orb-placer-selected-idx*)) (handle->process (-> *orb-placer-orbs* *orb-placer-selected-idx*)))
+                          (let ((orb (the ventblue (handle->process (-> *orb-placer-orbs* *orb-placer-selected-idx*))))
+                                (moved? #f))
+                            (when orb
+                              ;; highlight it
+                              (orb-placer-highlight orb #t)
+                              ;; respond to controller input
+                              ;; X/Z based on camera
+                              (when (nonzero? (-> pad stick0-speed))
+                                (set! (-> vec x) (sin (-> pad stick0-dir)))
+                                (set! (-> vec y) 0.0)
+                                (set! (-> vec z) (cos (-> pad stick0-dir)))
+                                (set! (-> vec w) 0.0)
+                                ;; camera magic
+                                (vector-matrix*! vec vec (matrix-local->world #t #f))
+                                (vector-flatten! vec vec (-> *camera* local-down))
+                                (vector-float*! vec vec (* (-> pad stick0-speed) 512.0)) ;; TODO scale?
+                                ;; actually move orb
+                                (vector+! (-> orb root trans) (-> orb root trans) vec)
+                                ;;  (vector+! (-> orb base) (-> orb base) vec))
+                                (true! moved?)
+                                )
+                              (cond
+                                ((cpad-pressed? 0 square)
+                                (-! (-> orb orb-req) 1.0)
+                                (set! *square-hold-time* (the time-frame #f)) ;; make sure square not considered held
+                                (set! *circle-hold-time* (the time-frame #f)) ;; make sure circle not considered held
+                                )
+                                ((cpad-pressed? 0 circle)
+                                (+! (-> orb orb-req) 1.0)
+                                (set! *square-hold-time* (the time-frame #f)) ;; make sure square not considered held
+                                (set! *circle-hold-time* (the time-frame #f)) ;; make sure circle not considered held
+                                )
+                                ((cpad-hold? 0 square)
+                                (set! *circle-hold-time* (the time-frame #f)) ;; square held, make sure circle not considered held
+                                (when (not *square-hold-time*) (set-time! *square-hold-time*)) ;; if we werent already holding square, set the hold time
+                                (when (zero? (mod (current-time) 50))
+                                  (-! (-> orb orb-req) (the int (* (the float (* (- (current-time) *square-hold-time*) (- (current-time) *square-hold-time*))) 0.0002))) ;; subtract O(square-hold-time^2) ?
+                                  ))
+                                ((cpad-hold? 0 circle)
+                                (set! *square-hold-time* (the time-frame #f)) ;; circle held, make sure square not considered held
+                                (when (not *circle-hold-time*) (set-time! *circle-hold-time*)) ;; if we werent already holding circle, set the hold time
+                                (when (zero? (mod (current-time) 50))
+                                  (+! (-> orb orb-req) (the int (* (the float (* (- (current-time) *circle-hold-time*) (- (current-time) *circle-hold-time*))) 0.0002))) ;; add O(circle-hold-time^2) ?
+                                  ))
+                                (else
+                                (set! *square-hold-time* (the time-frame #f)) ;; make sure square not considered held
+                                (set! *circle-hold-time* (the time-frame #f)) ;; make sure circle not considered held                              
+                                )
+                                )
+                              (when (< (-> orb orb-req) 0.0)
+                                (set! (-> orb orb-req) 0.0)) ;; clamp to 0
+                              (when (> (-> orb orb-req) 2000.0)
+                                (set! (-> orb orb-req) 2000.0)) ;; clamp to 2000
+                              (cond
+                                ;; fine tune/axis-aligned X/Z
+                                ((cpad-pressed? 0 down) (true! moved?) (+! (-> orb root trans z) (meters 0.03))) ;; (+! (-> orb base z) (meters 0.03)))
+                                ((cpad-pressed? 0 up) (true! moved?) (+! (-> orb root trans z) (meters -0.03))) ;; (+! (-> orb base z) (meters -0.03)))
+                                ((cpad-pressed? 0 right) (true! moved?) (+! (-> orb root trans x) (meters 0.03))) ;; (+! (-> orb base x) (meters 0.03)))
+                                ((cpad-pressed? 0 left) (true! moved?) (+! (-> orb root trans x) (meters -0.03))) ;; (+! (-> orb base x) (meters -0.03)))
+                                ;; Y (up/down)
+                                ((cpad-hold? 0 r2) (true! moved?) (+! (-> orb root trans y) (meters 0.08))) ;; (+! (-> orb base y) (meters 0.08)))
+                                ((cpad-hold? 0 l2) (true! moved?) (+! (-> orb root trans y) (meters -0.08))) ;; (+! (-> orb base y) (meters -0.08)))
+                                ((cpad-pressed? 0 r1) (true! moved?) (+! (-> orb root trans y) (meters 0.03))) ;; (+! (-> orb base y) (meters 0.03)))
+                                ((cpad-pressed? 0 l1) (true! moved?) (+! (-> orb root trans y) (meters -0.03))) ;; (+! (-> orb base y) (meters -0.03)))
+                                )
 
-                            (when moved?
-                              ;; un sleep 
-                              (logclear! (-> orb mask) (process-mask sleep))
-                              ;; force update transforms
-                              (when (type-type? (-> orb root type) collide-shape)
-                                (update-transforms! (the collide-shape (-> orb root)))))
-                            )))
+                              (when moved?
+                                ;; un sleep 
+                                (logclear! (-> orb mask) (process-mask sleep))
+                                ;; force update transforms
+                                (when (type-type? (-> orb root type) collide-shape)
+                                  (update-transforms! (the collide-shape (-> orb root)))))
+                              )
+                            )
+                          )
+                        (else
+                          ;; clear these
+                          (set! *square-hold-time* (the time-frame #f)) ;; make sure square not considered held
+                          (set! *circle-hold-time* (the time-frame #f)) ;; make sure circle not considered held
+                          )
+                        )
                       )
                     )
                   
