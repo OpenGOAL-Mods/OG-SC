@@ -1689,7 +1689,7 @@
   (update-transforms! (-> this root))
   (set! (-> this root pause-adjust-distance) 409600.0)
   (set! (-> this fact) (new 'process 'fact-info this arg1 (-> *FACT-bank* eco-full-inc)))
-  (set! (-> this block-func) (the-as (function vent symbol) true-func))
+  (set! (-> this block-func) (the-as (function vent symbol) false-func))
   (case (-> this fact pickup-type)
     (((pickup-type eco-blue))
      (set! (-> this part) (create-launch-control (-> *part-group-id-table* 44) this))

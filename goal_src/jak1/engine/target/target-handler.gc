@@ -476,7 +476,7 @@
     (('venting)
       (when (= (-> arg3 param 0) (pickup-type eco-blue))
         ;; only do this every X ticks, and only if we're not already at max health
-        (when (and (zero? (mod (current-time) 100))
+        (when (and (zero? (mod (current-time) 50))
                    (or (< (-> self fact health) 3.0) (< (-> self fact eco-pill) 50.0)))
           ;; increment health pip
           (+! (-> self fact eco-pill) 1.0)
