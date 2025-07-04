@@ -186,6 +186,14 @@
   ;; ensure FPS set to `60`
   (when (!= (-> *pc-settings* target-fps) 60)
     (set-frame-rate! *pc-settings* 60 #t))
+  (case (-> *speedrun-info* category)
+    (((speedrun-category all-cutscenes)) 
+      ;; nada
+      )
+    (else
+      (set! (-> *setting-control* default play-hints) #f)
+      )
+    )
   (none))
 
 (defun start-speedrun ((category speedrun-category))

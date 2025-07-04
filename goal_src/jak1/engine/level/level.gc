@@ -713,11 +713,11 @@
   "Is arg0 visible? Note that this will return #f if the visibility data is not loaded."
   (when (type-type? (-> ent type) entity-actor)
     (case (-> (the entity-actor ent) etype symbol)
-      (('ventblue)
-        (return #t)
+      (('ventblue 'ventred 'ventgreen 'ventyellow 'eco-red 'eco-blue 'eco-green 'eco-yellow)
+        (return #t) ;; always show
         )
       (('fuel-cell 'crate-buzzer)
-        (return #f)
+        (return #f) ;; always hide
         )
       )
     )
