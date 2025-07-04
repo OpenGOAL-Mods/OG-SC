@@ -716,6 +716,9 @@
       (('ventblue)
         (return #t)
         )
+      (('fuel-cell 'crate-buzzer)
+        (return #f)
+        )
       )
     )
   

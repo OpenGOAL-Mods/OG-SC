@@ -610,16 +610,27 @@
   ((-> self control unknown-surface01 active-hook))
   ;; mod change - health drain if no blue eco
   (when (and (not (logtest? (-> *target* state-flags) (state-flags being-attacked dying)))
-             (not (and (= (-> self fact eco-type) (pickup-type eco-blue)) 
+             (not (and (= (-> self fact eco-type) (pickup-type eco-blue))
                        (< 0.0 (-> self fact eco-level)))))
-    ;; only do this every X ticks
-    (when (zero? (mod (current-time) 100))
-      ;; decrement health pip
-      (-! (-> self fact eco-pill) 1.0)
-      ;; if we went negative, decrement big health via attack
-      (when (< (-> self fact eco-pill) 0.0)
-        (send-event self 'attack #f (static-attack-info ((mode 'generic))))
-        (set! (-> self fact eco-pill) 49.0))
+    (case (-> self state name) :comp name=
+      ((#f 'target-warp-in 'target-warp-out 'target-continue 'waiting-to-run)
+        ;; nada
+        )
+      (else
+        ;; (format 0 "~A: health pip drain~%" (-> self state name))
+        ;; only do this every 6 ticks. 300 ticks/sec -> -50 pips/sec
+        ;; (when (zero? (mod (current-time) 6))
+          ;; decrement health pip
+          (-! (-> self fact eco-pill) 1.0)
+          ;; if we went negative, decrement big health via attack
+          (when (< (-> self fact eco-pill) 0.0)
+            (-! (-> self fact health) 1.0)
+            (set! (-> self fact eco-pill) 49.0))
+          ;; deadge
+          (when (<= (-> self fact health) 0.0)
+            (send-event self 'attack-invinc #f (static-attack-info ((mode 'generic)))))
+          )
+        ;; )
       )
     )
   ;; mod change - tweak speed based on HP
