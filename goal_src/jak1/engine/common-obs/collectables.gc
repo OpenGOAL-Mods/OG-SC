@@ -1745,7 +1745,7 @@
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
       (when (and (or (= message 'touch) (= message 'attack)))
-        (send-event proc 'venting (-> self fact pickup-type)) ;; for health regain
+        (send-event proc 'venting (-> self fact pickup-type)) ;; for health regen
         (if (and (let ((a1-1 (new 'stack-no-clear 'event-message-block)))
                  (set! (-> a1-1 from) self)
                  (set! (-> a1-1 num-params) 2)
