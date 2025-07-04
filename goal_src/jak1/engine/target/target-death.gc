@@ -283,12 +283,29 @@
               (lambda ((arg0 continue-point))
                 (start 'play arg0))
               (car (-> s5-8 continues))))))
-      (ja-channel-set! 1)
-      (ja :group! eichar-stance-loop-ja)
-      (runs-on-jak-spawn) ;; trigger hook for mod base mod-base-change
-      (suspend)
-      (logior! (-> self control status) (cshape-moving-flags onsurf onground tsurf))
-      (go target-stance))
+      (cond
+        ((logtest? (-> arg0 flags) (continue-flags flut))
+          (suspend)
+          (logior! (-> self control status) (cshape-moving-flags onsurf onground tsurf))
+          (runs-on-jak-spawn) ;; trigger hook for mod base
+          (go target-flut-start (the handle #f))
+          )
+        ((logtest? (-> arg0 flags) (continue-flags racer))
+          (suspend)
+          (logior! (-> self control status) (cshape-moving-flags onsurf onground tsurf))
+          (runs-on-jak-spawn) ;; trigger hook for mod base
+          (go target-racing-start (the handle #f))
+          )
+        (else
+          (ja-channel-set! 1)
+          (ja :group! eichar-stance-loop-ja)
+          (suspend)
+          (logior! (-> self control status) (cshape-moving-flags onsurf onground tsurf))
+          (runs-on-jak-spawn) ;; trigger hook for mod base
+          (go target-stance)
+          )
+        )
+      )
   :post target-no-move-post)
 
 (define *smack-mods*

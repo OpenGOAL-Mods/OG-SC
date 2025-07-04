@@ -91,7 +91,10 @@
   (contf08)
   (contf09)
   (game-start)
-  (sage-ecorocks))
+  (sage-ecorocks)
+  (speedrun)
+  (flut)
+  (racer))
 
 ;; static data for a continue point
 (deftype continue-point (basic)
