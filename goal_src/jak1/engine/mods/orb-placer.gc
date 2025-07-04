@@ -25,106 +25,106 @@
        string
        :length
        ORB_PLACER_MAX
-       "ventblue-00"
-       "ventblue-01"
-       "ventblue-02"
-       "ventblue-03"
-       "ventblue-04"
-       "ventblue-05"
-       "ventblue-06"
-       "ventblue-07"
-       "ventblue-08"
-       "ventblue-09"
-       "ventblue-10"
-       "ventblue-11"
-       "ventblue-12"
-       "ventblue-13"
-       "ventblue-14"
-       "ventblue-15"
-       "ventblue-16"
-       "ventblue-17"
-       "ventblue-18"
-       "ventblue-19"
-       "ventblue-20"
-       "ventblue-21"
-       "ventblue-22"
-       "ventblue-23"
-       "ventblue-24"
-       "ventblue-25"
-       "ventblue-26"
-       "ventblue-27"
-       "ventblue-28"
-       "ventblue-29"
-       "ventblue-30"
-       "ventblue-31"
-       "ventblue-32"
-       "ventblue-33"
-       "ventblue-34"
-       "ventblue-35"
-       "ventblue-36"
-       "ventblue-37"
-       "ventblue-38"
-       "ventblue-39"
-       "ventblue-40"
-       "ventblue-41"
-       "ventblue-42"
-       "ventblue-43"
-       "ventblue-44"
-       "ventblue-45"
-       "ventblue-46"
-       "ventblue-47"
-       "ventblue-48"
-       "ventblue-49"
-       "ventblue-50"
-       "ventblue-51"
-       "ventblue-52"
-       "ventblue-53"
-       "ventblue-54"
-       "ventblue-55"
-       "ventblue-56"
-       "ventblue-57"
-       "ventblue-58"
-       "ventblue-59"
-       "ventblue-60"
-       "ventblue-61"
-       "ventblue-62"
-       "ventblue-63"
-       "ventblue-64"
-       "ventblue-65"
-       "ventblue-66"
-       "ventblue-67"
-       "ventblue-68"
-       "ventblue-69"
-       "ventblue-70"
-       "ventblue-71"
-       "ventblue-72"
-       "ventblue-73"
-       "ventblue-74"
-       "ventblue-75"
-       "ventblue-76"
-       "ventblue-77"
-       "ventblue-78"
-       "ventblue-79"
-       "ventblue-80"
-       "ventblue-81"
-       "ventblue-82"
-       "ventblue-83"
-       "ventblue-84"
-       "ventblue-85"
-       "ventblue-86"
-       "ventblue-87"
-       "ventblue-88"
-       "ventblue-89"
-       "ventblue-90"
-       "ventblue-91"
-       "ventblue-92"
-       "ventblue-93"
-       "ventblue-94"
-       "ventblue-95"
-       "ventblue-96"
-       "ventblue-97"
-       "ventblue-98"
-       "ventblue-99"))
+       "obj-00"
+       "obj-01"
+       "obj-02"
+       "obj-03"
+       "obj-04"
+       "obj-05"
+       "obj-06"
+       "obj-07"
+       "obj-08"
+       "obj-09"
+       "obj-10"
+       "obj-11"
+       "obj-12"
+       "obj-13"
+       "obj-14"
+       "obj-15"
+       "obj-16"
+       "obj-17"
+       "obj-18"
+       "obj-19"
+       "obj-20"
+       "obj-21"
+       "obj-22"
+       "obj-23"
+       "obj-24"
+       "obj-25"
+       "obj-26"
+       "obj-27"
+       "obj-28"
+       "obj-29"
+       "obj-30"
+       "obj-31"
+       "obj-32"
+       "obj-33"
+       "obj-34"
+       "obj-35"
+       "obj-36"
+       "obj-37"
+       "obj-38"
+       "obj-39"
+       "obj-40"
+       "obj-41"
+       "obj-42"
+       "obj-43"
+       "obj-44"
+       "obj-45"
+       "obj-46"
+       "obj-47"
+       "obj-48"
+       "obj-49"
+       "obj-50"
+       "obj-51"
+       "obj-52"
+       "obj-53"
+       "obj-54"
+       "obj-55"
+       "obj-56"
+       "obj-57"
+       "obj-58"
+       "obj-59"
+       "obj-60"
+       "obj-61"
+       "obj-62"
+       "obj-63"
+       "obj-64"
+       "obj-65"
+       "obj-66"
+       "obj-67"
+       "obj-68"
+       "obj-69"
+       "obj-70"
+       "obj-71"
+       "obj-72"
+       "obj-73"
+       "obj-74"
+       "obj-75"
+       "obj-76"
+       "obj-77"
+       "obj-78"
+       "obj-79"
+       "obj-80"
+       "obj-81"
+       "obj-82"
+       "obj-83"
+       "obj-84"
+       "obj-85"
+       "obj-86"
+       "obj-87"
+       "obj-88"
+       "obj-89"
+       "obj-90"
+       "obj-91"
+       "obj-92"
+       "obj-93"
+       "obj-94"
+       "obj-95"
+       "obj-96"
+       "obj-97"
+       "obj-98"
+       "obj-99"))
 
 ;; global for this so we can repopulate it as needed
 (define *orb-placer-select-menu* (the-as debug-menu #f))
@@ -163,7 +163,7 @@
         (let ((orb-proc (the process-drawable (handle->process orb-handle))))
           (when (and orb-proc (!= (-> orb-proc next-state name) 'dead-state) (!= (-> orb-proc next-state name) 'hud-collecting))
             ;; ensure correct highlighting
-            (orb-placer-highlight orb-proc is-selected?)
+            ;; (orb-placer-highlight orb-proc is-selected?)
             ;; draw z-debug text
             (add-debug-text-3d #t
                                (bucket-id debug-no-zbuf)
@@ -205,15 +205,40 @@
       ;; shift orb's position with camera angle, by 3m
       (vector+! vec vec (vector-normalize! camera-z-vector (meters 3.0)))
       ;; spawn and update orb-placer data
-      (let ((orb-handle (spawn-ventblue vec 0.0)))
+      (let ((orb-handle (spawn-obj 'ventblue vec 0.0)))
         (when (nonzero? orb-handle)
           (set! (-> *orb-placer-orbs* *orb-placer-count*) orb-handle)
           (set! *orb-placer-selected-idx* *orb-placer-count*)
           (true! *orb-placer-enabled?*)
           (true! *entity-placer-edit-mode?*)
-          (orb-placer-highlight (the ventblue (handle->process orb-handle)) #t)
+          ;; (orb-placer-highlight (the process-drawable (handle->process orb-handle)) #t)
           (+! *orb-placer-count* 1)
           (orb-placer-list-maintenance #t)))))
+  (none))
+
+(defun orb-placer-get-orb-req ((proc process-drawable))
+  (case (-> proc type symbol) :comp name=
+    (('eco-green 'eco-blue 'eco-red 'eco-yellow) (-> (the eco proc) orb-req))
+    (('ventgreen 'ventblue 'ventred 'ventyellow) (-> (the vent proc) orb-req))
+    (else 0.0)
+    )
+  )
+
+(defun orb-placer-dupe ()
+  (when (and (< *orb-placer-count* ORB_PLACER_MAX)
+             (>= *orb-placer-selected-idx* 0) (nonzero? (-> *orb-placer-orbs* *orb-placer-selected-idx*)))
+    (let ((orb-handle (-> *orb-placer-orbs* *orb-placer-selected-idx*)))
+      (when (and (nonzero? orb-handle) (handle->process orb-handle))
+        (let* ((obj (the process-drawable (handle->process orb-handle)))
+               (obj2-handle (spawn-obj (-> obj type symbol) (-> obj root trans) (orb-placer-get-orb-req obj))))
+          (when (nonzero? obj2-handle)
+            (set! (-> *orb-placer-orbs* *orb-placer-count*) obj2-handle)
+            (set! *orb-placer-selected-idx* *orb-placer-count*)
+            (true! *orb-placer-enabled?*)
+            (true! *entity-placer-edit-mode?*)
+            ;; (orb-placer-highlight (the process-drawable (handle->process orb-handle)) #t)
+            (+! *orb-placer-count* 1)
+            (orb-placer-list-maintenance #t))))))
   (none))
 
 (defun orb-placer-print-selected ()
@@ -223,15 +248,64 @@
         (format 0 " ~m, ~m, ~m~%" (-> orb root trans x) (-> orb root trans y) (-> orb root trans z)))))
   (none))
 
+(defun add-orb-req ((proc process-drawable) (amount float))
+  (case (-> proc type symbol) :comp name=
+    (('eco-green 'eco-blue 'eco-red 'eco-yellow)
+      (+! (-> (the eco proc) orb-req) amount)
+      (when (< (-> (the eco proc) orb-req) 0.0)
+        (set! (-> (the eco proc) orb-req) 0.0)) ;; clamp to 0
+      (when (> (-> (the eco proc) orb-req) 2000.0)
+        (set! (-> (the eco proc) orb-req) 2000.0)) ;; clamp to 2000)
+      )
+    (('ventgreen 'ventblue 'ventred 'ventyellow)
+      (+! (-> (the vent proc) orb-req) amount)
+      (when (< (-> (the vent proc) orb-req) 0.0)
+        (set! (-> (the vent proc) orb-req) 0.0)) ;; clamp to 0
+      (when (> (-> (the vent proc) orb-req) 2000.0)
+        (set! (-> (the vent proc) orb-req) 2000.0)) ;; clamp to 2000)
+      )
+    (else 0.0)
+    )
+  (none)
+  )
+
 (defun orb-placer-print-all ()
-  (format 0 "|------------ventblue start------------|~%")
+  (format 0 "|------------obj start------------|~%")
   (dotimes (i *orb-placer-count*)
     (let ((orb-handle (-> *orb-placer-orbs* i)))
       (when (and (nonzero? orb-handle) (handle->process orb-handle))
         (let ((orb (the process-drawable (handle->process orb-handle))))
-          (format 0 " ~m, ~m, ~m~%" (-> orb root trans x) (-> orb root trans y) (-> orb root trans z))))))
-  (format 0 "|-------------ventblue end-------------|~%")
+          (format 0 " ~A (~D) ~m, ~m, ~m (~D)~%" (-> orb type symbol) (orb-placer-get-orb-req orb) (-> orb root trans x) (-> orb root trans y) (-> orb root trans z))))))
+  (format 0 "|-------------obj end-------------|~%")
   (none))
+
+(defun orb-placer-get-next-type ((typename symbol))
+  (case typename :comp name=
+    (('eco-green) 'eco-blue)
+    (('eco-blue) 'eco-red)
+    (('eco-red) 'eco-yellow)
+    (('eco-yellow) 'ventgreen)
+    (('ventgreen) 'ventblue)
+    (('ventblue) 'ventred)
+    (('ventred) 'ventyellow)
+    (('ventyellow) 'eco-green)
+    )
+  )
+
+(defun orb-placer-toggle-type ()
+  (when (and (>= *orb-placer-selected-idx* 0) (nonzero? (-> *orb-placer-orbs* *orb-placer-selected-idx*)))
+    (let* ((obj (the process-drawable (handle->process (-> *orb-placer-orbs* *orb-placer-selected-idx*))))
+           (next-type (orb-placer-get-next-type (-> obj type symbol)))
+           (obj2-handle (spawn-obj next-type (-> obj root trans) (orb-placer-get-orb-req obj))))
+      (when (nonzero? obj2-handle)
+        (deactivate obj)
+        (set! (-> *orb-placer-orbs* *orb-placer-selected-idx*) obj2-handle)
+        ;; (orb-placer-highlight (handle-process obj2) #t)
+        (orb-placer-list-maintenance #t)
+        )
+      )
+    )
+  )
 
 ;; called from run-every-frame to ensure orb-placer is spawned/killed
 (define *orb-offset-tmp-vec* (new 'global 'vector))
@@ -247,15 +321,17 @@
         (not! *entity-placer-edit-mode?*))
 
       (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
-        (format (clear *orb-placer-hud-str*) "Vent Placer Edit Mode ")
+        (format (clear *orb-placer-hud-str*) "Object Placer Mode~%")
         (cond
-          (*entity-placer-edit-mode?* (format *orb-placer-hud-str* "~6LACTIVE~%"))
-          (else (format *orb-placer-hud-str* "~2LPAUSED~%"))
+          (*entity-placer-edit-mode?* 
+            (format *orb-placer-hud-str* "~2L(TRIANGLE) ~6LACTIVE~%"))
+          (else (format *orb-placer-hud-str* "~2L(TRIANGLE) PAUSED~%"))
           )
         (when (> *orb-placer-selected-idx* -1)
-          (let ((orb (the ventblue (handle->process (-> *orb-placer-orbs* *orb-placer-selected-idx*)))))
+          (let ((orb (the process-drawable (handle->process (-> *orb-placer-orbs* *orb-placer-selected-idx*)))))
             (when orb
-              (format *orb-placer-hud-str* "Orb Requirement: ~D" (the int (-> orb orb-req)))
+              (format *orb-placer-hud-str* "~2L(SQUARE- / CIRCLE+) ~0LOrb Requirement: ~D~%" (the int (orb-placer-get-orb-req orb)))
+              (format *orb-placer-hud-str* "~2L(X) ~0LType: ~S~%" (-> orb type symbol))
               )
             )
           )
@@ -310,11 +386,11 @@
                       ;; if we have an orb selected and the handle is nonzero...
                       (cond
                         ((and (>= *orb-placer-selected-idx* 0) (nonzero? (-> *orb-placer-orbs* *orb-placer-selected-idx*)) (handle->process (-> *orb-placer-orbs* *orb-placer-selected-idx*)))
-                          (let ((orb (the ventblue (handle->process (-> *orb-placer-orbs* *orb-placer-selected-idx*))))
+                          (let ((orb (the process-drawable (handle->process (-> *orb-placer-orbs* *orb-placer-selected-idx*))))
                                 (moved? #f))
                             (when orb
                               ;; highlight it
-                              (orb-placer-highlight orb #t)
+                              ;; (orb-placer-highlight orb #t)
                               ;; respond to controller input
                               ;; X/Z based on camera
                               (when (nonzero? (-> pad stick0-speed))
@@ -331,14 +407,17 @@
                                 ;;  (vector+! (-> orb base) (-> orb base) vec))
                                 (true! moved?)
                                 )
+                              ;; change type
+                              (when (cpad-pressed? 0 x)
+                                (orb-placer-toggle-type))
                               (cond
                                 ((cpad-pressed? 0 square)
-                                (-! (-> orb orb-req) 1.0)
+                                (add-orb-req orb -1.0)
                                 (set! *square-hold-time* (the time-frame #f)) ;; make sure square not considered held
                                 (set! *circle-hold-time* (the time-frame #f)) ;; make sure circle not considered held
                                 )
                                 ((cpad-pressed? 0 circle)
-                                (+! (-> orb orb-req) 1.0)
+                                (add-orb-req orb 1.0)
                                 (set! *square-hold-time* (the time-frame #f)) ;; make sure square not considered held
                                 (set! *circle-hold-time* (the time-frame #f)) ;; make sure circle not considered held
                                 )
@@ -346,23 +425,19 @@
                                 (set! *circle-hold-time* (the time-frame #f)) ;; square held, make sure circle not considered held
                                 (when (not *square-hold-time*) (set-time! *square-hold-time*)) ;; if we werent already holding square, set the hold time
                                 (when (zero? (mod (current-time) 50))
-                                  (-! (-> orb orb-req) (the int (* (the float (* (- (current-time) *square-hold-time*) (- (current-time) *square-hold-time*))) 0.0002))) ;; subtract O(square-hold-time^2) ?
+                                  (add-orb-req orb (the float (the int (* (the float (* (- (current-time) *square-hold-time*) (- (current-time) *square-hold-time*))) -0.0002)))) ;; subtract O(square-hold-time^2) ?
                                   ))
                                 ((cpad-hold? 0 circle)
                                 (set! *square-hold-time* (the time-frame #f)) ;; circle held, make sure square not considered held
                                 (when (not *circle-hold-time*) (set-time! *circle-hold-time*)) ;; if we werent already holding circle, set the hold time
                                 (when (zero? (mod (current-time) 50))
-                                  (+! (-> orb orb-req) (the int (* (the float (* (- (current-time) *circle-hold-time*) (- (current-time) *circle-hold-time*))) 0.0002))) ;; add O(circle-hold-time^2) ?
+                                  (add-orb-req orb (the float (the int (* (the float (* (- (current-time) *circle-hold-time*) (- (current-time) *circle-hold-time*))) 0.0002)))) ;; add O(circle-hold-time^2) ?
                                   ))
                                 (else
                                 (set! *square-hold-time* (the time-frame #f)) ;; make sure square not considered held
                                 (set! *circle-hold-time* (the time-frame #f)) ;; make sure circle not considered held                              
                                 )
                                 )
-                              (when (< (-> orb orb-req) 0.0)
-                                (set! (-> orb orb-req) 0.0)) ;; clamp to 0
-                              (when (> (-> orb orb-req) 2000.0)
-                                (set! (-> orb orb-req) 2000.0)) ;; clamp to 2000
                               (cond
                                 ;; fine tune/axis-aligned X/Z
                                 ((cpad-pressed? 0 down) (true! moved?) (+! (-> orb root trans z) (meters 0.03))) ;; (+! (-> orb base z) (meters 0.03)))
@@ -420,6 +495,7 @@
 (defun orbs-handle-input-settings ((file file-stream))
   ;; Parses an orb line in the file, expecting the format: (orb-idx x y z bob-scale type)
   (let* ((orb-idx (string->int *pc-temp-string*))
+         (ptype (file-stream-read-symbol file))
          (x (file-stream-read-float file))
          (y (file-stream-read-float file))
          (z (file-stream-read-float file))
@@ -429,9 +505,8 @@
     (set! *orb-placer-count* (max *orb-placer-count* (+ orb-idx 1)))
     ;; (dbg-format 0 "load spawn-ventblue from file, total count is now ~D~%" *orb-placer-count*)
     (set-vector-meters! v x y z)
-    (let ((orb-handle (spawn-ventblue v orb-req))) ;; just pass type/amount=1.0 here and we set the type after its spawned
+    (let ((orb-handle (spawn-obj ptype v orb-req))) ;; just pass type/amount=1.0 here and we set the type after its spawned
       (when (nonzero? orb-handle)
-        ;; (orb-placer-set-marking (the skill (handle->process orb-handle)) type)
         (set! (-> *orb-placer-orbs* orb-idx) orb-handle)
         )
       )
@@ -461,7 +536,7 @@
     (file-stream-close file)
     )
 
-  ;; (dbg-format 0 "vent-placer file read: ~A~%" filename)
+  ;; (dbg-format 0 "obj-placer file read: ~A~%" filename)
 
   #t
   )
@@ -470,16 +545,16 @@
   (dotimes (idx *orb-placer-count*)
     (cond
       ((and (-> *orb-placer-orbs* idx) (nonzero? (-> *orb-placer-orbs* idx)) (handle->process (-> *orb-placer-orbs* idx)))
-        (let* ((orb (the ventblue (handle->process (-> *orb-placer-orbs* idx))))
+        (let* ((orb (the process-drawable (handle->process (-> *orb-placer-orbs* idx))))
                (v (-> orb root trans)) ;; (-> orb base))
-               (orb-req (-> orb orb-req))
+               (orb-req (orb-placer-get-orb-req orb))
                )
-          (format file "  (~D ~m ~m ~m ~F)~%" idx (-> v x) (-> v y) (-> v z) orb-req)
+          (format file "  (~D ~S ~m ~m ~m ~F)~%" idx (-> orb type symbol) (-> v x) (-> v y) (-> v z) orb-req)
           )
         )
       (else
         ;; skipped orb?
-        (format 0 "found missing vent in idx ~D, skipping~%" idx)
+        (format 0 "found missing obj in idx ~D, skipping~%" idx)
         )
       )
     )
@@ -502,12 +577,12 @@
     (file-stream-close file)
     )
 
-  (format 0 "vent-placer file write: ~A~%" filename)
+  (format 0 "obj-placer file write: ~A~%" filename)
 
   #t
   )
 
-(define *orba-filename* "VENTBLUE-")
+(define *orba-filename* "OBJPLACER-")
 
 (defun orbs-save-to-file ((filenum int))
   (format (clear *pc-temp-string-1*) "~S/~S~D.gc" *pc-settings-folder* *orba-filename* filenum)
@@ -524,14 +599,14 @@
   (format (clear *pc-temp-string-1*) "~S/~S~D.gc" *pc-settings-folder* *orba-filename* filenum)
   (cond
     ((pc-filepath-exists? *pc-temp-string-1*)
-      (format 0 "[PC] Vent Placer Settings found at '~S'...loading!~%" *pc-temp-string-1*)
+      (format 0 "[PC] Obj Placer Settings found at '~S'...loading!~%" *pc-temp-string-1*)
       (orb-placer-clear!)
       (unless (orbs-read-from-file *pc-temp-string-1*)
-        (format 0 "[PC] Vent Placer Settings found at '~S' but could not be loaded!~%" *pc-temp-string-1*)
+        (format 0 "[PC] Obj Placer Settings found at '~S' but could not be loaded!~%" *pc-temp-string-1*)
         )
       )
     (else
-      (format 0 "[PC] Vent Placer Settings not found at '~S'~%" *pc-temp-string-1*)
+      (format 0 "[PC] Obj Placer Settings not found at '~S'~%" *pc-temp-string-1*)
       )
     )
   0)
