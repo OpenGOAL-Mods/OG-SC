@@ -121,8 +121,13 @@
     (if (null? arg0) (set! arg0 #f))
     (case (-> arg0 type)
       ((string)
-       (let ((v1-5 (get-continue-by-name this (the-as string arg0)))) (if v1-5 (set! (-> this current-continue) v1-5))))
-      ((continue-point) (set! (-> this current-continue) (the-as continue-point arg0)))
+       (let ((v1-5 (get-continue-by-name this (the-as string arg0)))) 
+        (when v1-5
+          (when (logtest? (-> v1-5 flags) (continue-flags warp))
+            (set! (-> this current-continue) v1-5)))))
+      ((continue-point) 
+        (when (logtest? (-> (the-as continue-point arg0) flags) (continue-flags warp))
+          (set! (-> this current-continue) (the-as continue-point arg0))))
       (else
        (let ((s4-3 *default-continue*))
          (position-in-front-of-camera! (-> s4-3 trans) 40960.0 4096.0)

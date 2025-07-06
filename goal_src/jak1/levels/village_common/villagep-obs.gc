@@ -259,12 +259,12 @@
             ((= v1-11 'village3) 3)
             ((or (= v1-11 'citadel) (= v1-11 'lavatube)) 4)
             (else -1))))
-  (set! (-> self max-slot)
-        (cond
-          ((task-closed? (game-task village4-button) (task-status need-hint)) 4)
-          ((task-closed? (game-task village3-button) (task-status need-hint)) 3)
-          ((task-closed? (game-task village2-levitator) (task-status need-hint)) 2)
-          (else 1)))
+  (set! (-> self max-slot) 4) ;; changed for mod - unlock all warp gate options
+        ;; (cond
+        ;;   ((task-closed? (game-task village4-button) (task-status need-hint)) 4)
+        ;;   ((task-closed? (game-task village3-button) (task-status need-hint)) 3)
+        ;;   ((task-closed? (game-task village2-levitator) (task-status need-hint)) 2)
+        ;;   (else 1)))
   (go-virtual idle)
   (none))
 
@@ -312,16 +312,17 @@
       ((logtest? (-> *target* control root-prim prim-core action)
                  (collide-action edgegrab-cam swingpole-active racer snowball tube flut))
        #f)
-      ((= v1-2 (game-task training-door))
-       (cond
-         ((and (task-complete? *game-info* (game-task training-door))
-               (task-complete? *game-info* (game-task training-gimmie))
-               (task-complete? *game-info* (game-task training-climb))
-               (task-complete? *game-info* (game-task training-buzzer)))
-          #t)
-         (else
-          (level-hint-spawn (text-id training-warp-gate-blocked) "sagevb38" (the-as entity #f) *entity-pool* (game-task none))
-          #f)))
+      ;; mod change - unlock warp gates
+      ;; ((= v1-2 (game-task training-door))
+      ;;  (cond
+      ;;    ((and (task-complete? *game-info* (game-task training-door))
+      ;;          (task-complete? *game-info* (game-task training-gimmie))
+      ;;          (task-complete? *game-info* (game-task training-climb))
+      ;;          (task-complete? *game-info* (game-task training-buzzer)))
+      ;;     #t)
+      ;;    (else
+      ;;     (level-hint-spawn (text-id training-warp-gate-blocked) "sagevb38" (the-as entity #f) *entity-pool* (game-task none))
+      ;;     #f)))
       (else #t))))
 
 (defmethod basebutton-method-26 ((this warp-gate-switch))

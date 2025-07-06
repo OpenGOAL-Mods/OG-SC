@@ -454,6 +454,14 @@
                               (when moved?
                                 ;; un sleep 
                                 (logclear! (-> orb mask) (process-mask sleep))
+                                ;; make sure we update extra vectors
+                                (cond
+                                  ((type-type? (-> orb type) collectable)
+                                    (vector-copy! (-> (the collectable orb) base) (-> orb root trans))
+                                    (vector-copy! (-> (the collectable orb) old-base) (-> orb root trans))
+                                    (vector-copy! (-> (the collectable orb) extra-trans) (-> orb root trans))
+                                    )
+                                  )
                                 ;; force update transforms
                                 (when (type-type? (-> orb root type) collide-shape)
                                   (update-transforms! (the collide-shape (-> orb root)))))

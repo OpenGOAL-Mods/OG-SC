@@ -29,12 +29,12 @@
 (defenum collectable-flags
   :bitfield #t
   :type uint32
-  (trans 0)
-  (fade 1)
-  (can-collect 2)
-  (fading 3)
-  (suck 4)
-  (ignore-blue 5)
+  (trans 0);; 1
+  (fade 1) ;; 2
+  (can-collect 2);; 4
+  (fading 3);; 8
+  (suck 4) ;; 16
+  (ignore-blue 5);; 32
   (anim 6))
 
 ;; DECOMP BEGINS
@@ -636,7 +636,7 @@
   (initialize-eco this arg0 (pickup-type eco-green) (-> *FACT-bank* health-single-inc))
   (none))
 
-(deftype eco-green (health) ())
+(deftype eco-green (eco) ())
 
 (deftype eco-pill (eco-collectable) ())
 
@@ -697,6 +697,7 @@
                         (the-as time-frame 0)
                         (the-as float 1024.0)))
     (else (initialize-params self (seconds 15) (the-as float 1024.0))))
+  (set! (-> self respawn-delay) (seconds 0.25))
   (update-transforms! (-> self root))
   (set! (-> self event-hook) (-> (method-of-object self wait) event))
   (set! (-> self orb-req) orb-req)
