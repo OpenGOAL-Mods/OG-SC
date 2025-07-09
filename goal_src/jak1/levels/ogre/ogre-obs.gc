@@ -525,7 +525,9 @@
   (rigid-body-platform-method-29 this *ogre-step-constants*)
   (call-parent-method this)
   (let ((a0-5 (entity-actor-lookup (-> this entity) 'alt-actor 0)))
-    (if (and a0-5 (logtest? (-> a0-5 extra perm status) (entity-perm-status complete))) (set! (-> this active) #t)))
+    (if (or (task-complete? *game-info* (game-task ogre-boss)) 
+            (and a0-5 (logtest? (-> a0-5 extra perm status) (entity-perm-status complete))))
+      (set! (-> this active) #t)))
   0
   (none))
 

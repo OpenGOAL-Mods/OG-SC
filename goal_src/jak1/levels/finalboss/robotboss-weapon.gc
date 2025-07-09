@@ -175,7 +175,8 @@
 (defstate darkecobomb-explode (darkecobomb)
   :code
     (behavior ((arg0 symbol))
-      (send-event *target* 'reset-pickup 'eco)
+      ;; mod change - dont reset eco
+      ;; (send-event *target* 'reset-pickup 'eco)
       (sound-play "explod-bomb" :position #f)
       (activate! *camera-smush-control* 819.2 37 600 1.0 0.995)
       (send-event (ppointer->process (-> self parent)) 'flash 255.0)

@@ -542,7 +542,8 @@
       (let ((v1-1 (handle->process (-> self fcell-handle))))
         (if v1-1 (clear-collide-with-as (-> (the-as fuel-cell v1-1) root))))
       (close-specific-task! (game-task sunken-room) (task-status need-reminder))
-      (send-event *target* 'reset-pickup 'eco)
+      ;; mod change - dont reset eco
+      ;; (send-event *target* 'reset-pickup 'eco)
       (let ((gp-0 (get-process *default-dead-pool* sunkencam #x4000)))
         (set! (-> (the-as sunkencam
                           (-> (when gp-0

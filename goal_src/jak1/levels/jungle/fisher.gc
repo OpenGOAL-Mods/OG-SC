@@ -1210,7 +1210,8 @@
   :enter
     (behavior ()
       (set-setting! 'ambient-volume 'rel 50.0 0)
-      (send-event *target* 'reset-pickup 'eco)
+      ;; mod change - dont reset eco
+      ;; (send-event *target* 'reset-pickup 'eco)
       (ja-channel-set! 0)
       (clear-collide-with-as (-> self root))
       (process-spawn-function process

@@ -21,8 +21,90 @@
 ;; Begin function defintions.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun complete-entity-if-exists ((entity-name string))
+  (let ((e (entity-by-name entity-name)))
+    (when e
+      (logior! (-> e extra perm status) (entity-perm-status complete))
+      )
+    )
+  (none))
+
+(defun kill-entity-if-exists ((entity-name string))
+  (let ((e (entity-by-name entity-name)))
+    (when e
+      (logior! (-> e extra perm status) (entity-perm-status dead))
+      )
+    )
+  (none))
+
 (defun runs-every-frame ()
-  ;;(increase-power-cell-by-one) This is a call to increase-power-cell-by-one defined in mod-common-functions.gc
+  ;; play hints off (why do they keep turning on?)
+  (false! (-> *setting-control* default play-hints))
+
+  ;; close most tasks
+  (dotimes (i (game-task max))
+    (case i
+      (((game-task none) (game-task complete) ;; dont care
+        (game-task leaving-misty) ;; dont care
+        (game-task assistant-village3) ;; unused
+        (game-task jungle-eggtop) ;; keep this open (blue eco switch)
+        )
+        ;; do nothing, don't close these tasks
+        )
+      (((game-task finalboss-movies))
+        ;; close unless we're in superdupercharged mode
+        (when (not (task-closed? (the-as game-task i) (task-status need-reward-speech))) ;; TODO - add supercharged check
+          (close-specific-task! (the-as game-task i) (task-status need-reward-speech))
+          )
+        )
+      (((game-task plunger-lurker-hit))
+        (when (not (task-closed? (the-as game-task i) (task-status need-hint)))
+          (close-specific-task! (the-as game-task i) (task-status need-hint))
+          )
+        )
+      (((game-task village3-button))
+        (when (not (task-closed? (the-as game-task i) (task-status need-introduction)))
+          (close-specific-task! (the-as game-task i) (task-status need-introduction))
+          )
+        )
+      (((game-task firecanyon-assistant) (game-task village2-levitator) (game-task lavatube-start) (game-task village4-button)) 
+        (when (not (task-closed? (the-as game-task i) (task-status need-reward-speech)))
+          (close-specific-task! (the-as game-task i) (task-status need-reward-speech))
+          )
+        )
+      (else
+        (when (not (task-closed? (the-as game-task i) (task-status need-resolution)))
+          (logior! (-> *game-info* task-perm-list data i status) (entity-perm-status real-complete))
+          (close-specific-task! (the-as game-task i) (task-status need-resolution))
+          )
+        )
+      )
+    )
+
+  ;; kill some entities that don't respect their task status
+  ;; jungle
+  (complete-entity-if-exists "reflector-mirror-2")
+  (complete-entity-if-exists "periscope-11")
+  (complete-entity-if-exists "periscope-12")
+  (complete-entity-if-exists "periscope-13")
+  (complete-entity-if-exists "periscope-14")
+  (complete-entity-if-exists "periscope-15")
+  ;; jungleb
+  (complete-entity-if-exists "plant-boss-3")
+  ;; ogre
+  (complete-entity-if-exists "ogreboss-1")
+  ;; citadel
+  (complete-entity-if-exists "citb-generator-1")
+  (complete-entity-if-exists "citb-generator-2")
+  (complete-entity-if-exists "citb-generator-3")
+  (complete-entity-if-exists "citb-generator-4")
+  (complete-entity-if-exists "citb-generator-5")
+  (complete-entity-if-exists "citb-generator-6")
+  (complete-entity-if-exists "citb-generator-7")
+  ;; finalboss
+  (kill-entity-if-exists "robotboss-3") ;; TODO - add supercharged check
+
+
   (if *show-input-display* (input-display-on) (input-display-off))
   ;; ensure orb-placer is spawned/killed as requested, debug menu is updated
   (when *debug-segment*

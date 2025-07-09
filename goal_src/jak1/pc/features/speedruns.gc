@@ -632,7 +632,7 @@
 
 (defun speedrun-practice-spawn ()
   ;; enable speedrunner mode
-  (set! (-> *pc-settings* speedrunner-mode?) #t)
+  ;; (set! (-> *pc-settings* speedrunner-mode?) #t)
   ;; randomize game id so the autosplitter knows to restart
   (update-autosplit-jak1-new-game)
 

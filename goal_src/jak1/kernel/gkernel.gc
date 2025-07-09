@@ -1833,7 +1833,10 @@
            (when (eq? (-> pp pool type) dead-pool-heap)
              ;; we can shrink the heap now.
              (shrink-heap (the dead-pool-heap (-> pp pool)) pp)))
-          (else (format 0 "GOT UNKNOWN INIT: ~A~%" (-> pp status))))
+          (else 
+            ;; mod change - dont spam this
+            ;; (format 0 "GOT UNKNOWN INIT: ~A~%" (-> pp status))
+            ))
         ;; restore the old pp
         (set! pp old-pp)
         func-val))))
