@@ -805,6 +805,7 @@
   (case (-> this fact pickup-type)
     (((pickup-type buzzer))
      (set! (-> this type) crate-buzzer)
+     (deactivate this) ;; mod change - no fly crates
      (when (= (-> this look) 'wood)
        (set! (-> this look) 'iron)
        (set! (-> this defense) 'iron)))

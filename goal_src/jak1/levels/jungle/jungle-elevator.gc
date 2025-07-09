@@ -22,7 +22,9 @@
       (set! (-> self draw light-index) (the-as uint 255))
       (set! (-> self bottom-height) (-> jungle bottom-height))
       (set! (-> jungle bottom-height) (-> jungleb bottom-height))
-      (send-event *target* 'reset-pickup 'eco))
+      ;; mod change - dont take away eco on elevator
+      ;; (send-event *target* 'reset-pickup 'eco)
+      )
   :exit
     (behavior ()
       (set! (-> jungle bottom-height) (-> self bottom-height))

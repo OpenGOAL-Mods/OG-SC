@@ -316,7 +316,10 @@
                    (gp-1 (-> self root))
                    (s4-0 (-> (the-as process-drawable v1-13) root trans)))
               (if (< f30-0 (fabs (deg-diff (y-angle gp-1) (vector-y-angle (vector-! (new 'stack-no-clear 'vector) s4-0 (-> gp-1 trans))))))
-                (go pelican-spit))))))
+                ;; mod change - explode instead of spit cell
+                (go pelican-explode #f)
+                ;; (go pelican-spit)
+                )))))
         (('touch) (send-shove-back (-> self root) proc (the-as touching-shapes-entry (-> block param 0)) 0.7 6144.0 16384.0))))
   :enter
     (behavior ((arg0 symbol))
@@ -586,16 +589,19 @@
   (set! (-> this neck ignore-angle) 16384.0)
   (case (-> this entity extra perm user-int8 0)
     ((10) (go pelican-wait-at-end #t))
-    ((5) (go pelican-wait-at-nest #t))
-    ((2)
-     (let ((s5-2 (manipy-spawn (-> this root trans) (-> this entity) *fuel-cell-sg* (new 'static 'vector :w 4915.2) :to this)))
-       (set! (-> this fuel-cell) (if s5-2 (ppointer->handle s5-2) (the-as handle #f)))
-       (when s5-2
-         (send-event (ppointer->process s5-2)
-                     'eval
-                     (lambda :behavior pelican ()
-                       (let ((v0-0 (create-launch-control (-> *part-group-id-table* 63) self))) (set! (-> self part) v0-0) v0-0)))
-         (send-event (ppointer->process s5-2) 'trans-hook fuel-cell-animate)))
-     (go pelican-wait-at-nest #t))
-    (else (go pelican-circle)))
+    ;; mod change - pelican starts at nest
+    (else (go pelican-wait-at-nest #t))
+    ;; ((5) (go pelican-wait-at-nest #t))
+    ;; ((2)
+    ;;  (let ((s5-2 (manipy-spawn (-> this root trans) (-> this entity) *fuel-cell-sg* (new 'static 'vector :w 4915.2) :to this)))
+    ;;    (set! (-> this fuel-cell) (if s5-2 (ppointer->handle s5-2) (the-as handle #f)))
+    ;;    (when s5-2
+    ;;      (send-event (ppointer->process s5-2)
+    ;;                  'eval
+    ;;                  (lambda :behavior pelican ()
+    ;;                    (let ((v0-0 (create-launch-control (-> *part-group-id-table* 63) self))) (set! (-> self part) v0-0) v0-0)))
+    ;;      (send-event (ppointer->process s5-2) 'trans-hook fuel-cell-animate)))
+    ;;  (go pelican-wait-at-nest #t))
+    ;; (else (go pelican-circle))
+    )
   (none))
