@@ -217,7 +217,7 @@
         (load-state-want-vis 'sno)
         (set-continue! *game-info* "snow-start"))
       (process-entity-status! self (entity-perm-status bit-3) #f)
-      (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
+      ;; (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
       (go-virtual idle #t))
   :post
     (behavior ()
@@ -254,7 +254,7 @@
         (load-state-want-vis 'vi3)
         (set-continue! *game-info* "village3-farside"))
       (process-entity-status! self (entity-perm-status bit-3) #f)
-      (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
+      ;; (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
       (go-virtual idle #f))
   :post
     (-> (method-of-type gondola ride-up)

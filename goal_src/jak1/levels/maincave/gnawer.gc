@@ -896,6 +896,7 @@
          (if (and (= (-> proc type) money) (= (-> block param 0) 'pickup)) (gnawer-method-30 self (the-as process-drawable proc))))))
   :code
     (behavior ()
+      (format 0 "gnawer-put-items-at-dest ~A ~D ~%" (-> self name) (-> self entity extra perm user-uint16 0))
       (set! (-> self draw origin-joint-index) (the-as uint 0))
       (clear-collide-with-as (-> self root))
       (set! (-> self skel postbind-function) #f)
@@ -924,6 +925,7 @@
                   (birth-pickup-at-point s3-0 (pickup-type money) 1.0 #f self (the-as fact-info #f))))))))
       (until (not (-> self child))
         (suspend))
+      (format 0 "gnawer-put-items-at-dest going to cleanup-for-death~%")
       (cleanup-for-death self)))
 
 (defun gnawer-joint-callback ((arg0 gnawer))
@@ -1075,6 +1077,10 @@
   (set! (-> this link) (new 'process 'actor-link-info this))
   (set! (-> this gnawer-id) (+ (actor-count-before (-> this link)) 1))
   (if (and (-> this entity) (logtest? (-> this entity extra perm status) (entity-perm-status complete)))
-    (go gnawer-put-items-at-dest)
+    (begin 
+      (let ((v1-10 (-> this entity extra perm)))
+        (logior! (-> v1-10 status) (entity-perm-status user-set-from-cstage))
+        (set! (-> v1-10 user-int16 0) (the-as int (-> this money-mask))))
+      (go gnawer-put-items-at-dest))
     (go gnawer-chewing-on-post))
   (none))
