@@ -47,7 +47,7 @@
       (((game-task none) (game-task complete) ;; dont care
         (game-task leaving-misty) ;; dont care
         (game-task assistant-village3) ;; unused
-        (game-task jungle-eggtop) ;; keep this open (blue eco switch)
+        ;; (game-task jungle-eggtop) ;; keep this open (blue eco switch)
         )
         ;; do nothing, don't close these tasks
         )
@@ -91,8 +91,27 @@
   (complete-entity-if-exists "periscope-15")
   ;; jungleb
   (complete-entity-if-exists "plant-boss-3")
+  ;; rolling
+  (complete-entity-if-exists "lightning-mole-2")
+  (complete-entity-if-exists "lightning-mole-3")
+  (complete-entity-if-exists "lightning-mole-4")
+  (complete-entity-if-exists "lightning-mole-5")
+  (complete-entity-if-exists "robber-2")
+  (complete-entity-if-exists "robber-3")
+  (complete-entity-if-exists "robber-4")
+  (complete-entity-if-exists "robber-5")
   ;; ogre
   (complete-entity-if-exists "ogreboss-1")
+  ;; maincave
+  (complete-entity-if-exists "gnawer-14")
+  (complete-entity-if-exists "gnawer-19")
+  (complete-entity-if-exists "gnawer-18")
+  (complete-entity-if-exists "gnawer-17")
+  (complete-entity-if-exists "gnawer-15")
+  (complete-entity-if-exists "gnawer-13")
+  (complete-entity-if-exists "gnawer-12")
+  (complete-entity-if-exists "gnawer-16")
+  (complete-entity-if-exists "gnawer-11")
   ;; citadel
   (complete-entity-if-exists "citb-generator-1")
   (complete-entity-if-exists "citb-generator-2")

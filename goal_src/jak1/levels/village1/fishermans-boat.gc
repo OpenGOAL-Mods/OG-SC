@@ -747,7 +747,7 @@
           (load-commands-set! *level* '())
           (load-state-want-display-level 'village1 'display)
           (load-state-want-force-vis 'village1 #f)
-          (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
+          ;; (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
           (go fishermans-boat-docked-village)))
       (rider-trans))
   :code
@@ -861,7 +861,7 @@
         (when #t
           (set! (-> *camera* cam-entity) (the-as entity #t))
           (send-event *camera* 'clear-entity)
-          (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
+          ;; (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
           (go fishermans-boat-docked-misty)))
       (rider-trans))
   :code
@@ -1127,7 +1127,7 @@
           (none))
         :to
         self)
-      (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
+      ;; (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
       (go fishermans-boat-docked-misty))
   :post
     (behavior ()
@@ -1198,7 +1198,7 @@
       (set! (-> self propeller enable) #t)
       (fishermans-boat-play-sounds)
       (process-entity-status! self (entity-perm-status complete) #t)
-      (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
+      ;; (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
       (go fishermans-boat-docked-village))
   :post
     (behavior ()

@@ -123,10 +123,12 @@
       ((string)
        (let ((v1-5 (get-continue-by-name this (the-as string arg0)))) 
         (when v1-5
-          (when (logtest? (-> v1-5 flags) (continue-flags warp))
+          ;; mod change - only allow certain continue pts
+          (when (logtest? (-> v1-5 flags) (continue-flags warp intro title))
             (set! (-> this current-continue) v1-5)))))
       ((continue-point) 
-        (when (logtest? (-> (the-as continue-point arg0) flags) (continue-flags warp))
+        ;; mod change - only allow certain continue pts
+        (when (logtest? (-> (the-as continue-point arg0) flags) (continue-flags warp intro title))
           (set! (-> this current-continue) (the-as continue-point arg0))))
       (else
        (let ((s4-3 *default-continue*))
