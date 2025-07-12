@@ -604,12 +604,15 @@
   0
   (none))
 
+(define-extern *mod-hp-drain?* symbol)
+(define-extern *mod-hp-speed-effect?* symbol)
 (defbehavior flag-setup target ()
   (level-setup)
   (set! (-> self control unknown-vector10 quad) (-> self control transv quad))
   ((-> self control unknown-surface01 active-hook))
   ;; mod change - health drain if no blue eco
-  (when (and (not (logtest? (-> *target* state-flags) (state-flags being-attacked dying)))
+  (when (and *mod-hp-drain?*
+             (not (logtest? (-> *target* state-flags) (state-flags being-attacked dying)))
              (not (and (= (-> self fact eco-type) (pickup-type eco-blue))
                        (< 0.0 (-> self fact eco-level)))))
     (case (-> self state name) :comp name=
@@ -635,6 +638,7 @@
     )
   ;; mod change - tweak speed based on HP
   (let ((scale (cond
+                ((not *mod-hp-speed-effect?*) 1.0) ;; feature disabled
                 ((and (>= (-> self fact health) 3.0) (>= (-> self fact eco-pill) 50.0)) 1.0) ;; 4HP - 100%
                 ((>= (-> self fact health) 3.0) 0.75) ;; 3HP - 75%
                 ((>= (-> self fact health) 2.0) 0.5) ;; 2HP - 50%
