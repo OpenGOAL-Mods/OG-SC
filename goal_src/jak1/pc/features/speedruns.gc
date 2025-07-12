@@ -471,9 +471,9 @@
 (define *full-blue?* #f)
 
 (defun generic-post-init ()
-  (when *last-real-continue-point*
-    (set! (-> *game-info* current-continue) *last-real-continue-point*)
-    )
+  ;; (when *last-real-continue-point*
+  ;;   (set! (-> *game-info* current-continue) *last-real-continue-point*)
+  ;;   )
   (when *full-blue?*
     (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
     (pickup-collectable! (-> *target* fact) (pickup-type eco-green) 4.0 (process->handle (-> *target* fact process)))
@@ -586,36 +586,40 @@
   (none)
   )
 
+(defun store-temp-checkpoint ()
+  (set! *last-speedrun-practice-option* (speedrun-practice-option none))
+  ;; assume current continue is good enough for the current location
+  (continue-point-copy! *tmp-continue-point* (-> *game-info* current-continue))
+  (vector-copy! (-> *tmp-continue-point* trans) (-> *target* root trans))
+  (quaternion-copy! (-> *tmp-continue-point* quat) (-> *target* control unknown-quaternion00))
+  (vector-copy! (-> *tmp-continue-point* camera-trans) (-> *camera-combiner* trans))
+  (camera-rot-copy! *tmp-continue-point* (-> *camera-combiner* inv-camera-rot))
+
+  ;; flag init
+  (set! (-> *tmp-continue-point* flags) (continue-flags speedrun))
+  (set! *full-hp?* (and (!= *target* #f)
+                (= (-> *target* fact health) 3.0)
+                (= (-> *target* fact eco-pill) 50.0)
+                ))
+  (case (-> *target* state)
+    ((target-flut-stance)
+      (logior! (-> *tmp-continue-point* flags) (continue-flags flut))
+      )
+    ((target-racing)
+      (logior! (-> *tmp-continue-point* flags) (continue-flags racer))
+      )
+    )
+  (none)
+  )
+
 (defun speedrun-practice-store-temp-checkpoint ()
-  ;; outside of bsp breaks shit
+  ;; ignore this it seems to work -> ;; outside of bsp breaks shit
   (cond
-    ((or (-> *level* level0 inside-boxes?) (-> *level* level1 inside-boxes?))
+    (#t ;; (or (-> *level* level0 inside-boxes?) (-> *level* level1 inside-boxes?))
       (case (-> *target* state)
         ;; only store temp checkpoint if in one of these states
         ((target-stance target-wade-stance target-swim-stance target-flut-stance target-racing)
-          (set! *last-speedrun-practice-option* (speedrun-practice-option none))
-
-          ;; assume current continue is good enough for the current location
-          (continue-point-copy! *tmp-continue-point* (-> *game-info* current-continue))
-          (vector-copy! (-> *tmp-continue-point* trans) (-> *target* root trans))
-          (quaternion-copy! (-> *tmp-continue-point* quat) (-> *target* control unknown-quaternion00))
-          (vector-copy! (-> *tmp-continue-point* camera-trans) (-> *camera-combiner* trans))
-          (camera-rot-copy! *tmp-continue-point* (-> *camera-combiner* inv-camera-rot))
-
-          ;; flag init
-          (set! (-> *tmp-continue-point* flags) (continue-flags speedrun))
-          (set! *full-hp?* (and (!= *target* #f)
-                        (= (-> *target* fact health) 3.0)
-                        (= (-> *target* fact eco-pill) 50.0)
-                        ))
-          (case (-> *target* state)
-            ((target-flut-stance)
-              (logior! (-> *tmp-continue-point* flags) (continue-flags flut))
-              )
-            ((target-racing)
-              (logior! (-> *tmp-continue-point* flags) (continue-flags racer))
-              )
-            )
+          (store-temp-checkpoint)
           (sound-play "select-menu")
           )
         (else

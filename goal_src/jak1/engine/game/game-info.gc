@@ -128,7 +128,7 @@
             (set! (-> this current-continue) v1-5)))))
       ((continue-point) 
         ;; mod change - only allow certain continue pts
-        (when (logtest? (-> (the-as continue-point arg0) flags) (continue-flags warp intro title))
+        (when (logtest? (-> (the-as continue-point arg0) flags) (continue-flags warp intro title speedrun))
           (set! (-> this current-continue) (the-as continue-point arg0))))
       (else
        (let ((s4-3 *default-continue*))
