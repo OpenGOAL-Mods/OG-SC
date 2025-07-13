@@ -157,7 +157,9 @@
             :option-type (game-option-type menu)
             :name (text-id disable-auto-save)
             :scale #t
-            :param3 (game-option-menu memcard-disable-auto-save))
+            :param3 (game-option-menu memcard-disable-auto-save)
+            :option-disabled-func (lambda () #t) ;; mod change - require autosave
+            )
        (new 'static
             'game-option
             :option-type (game-option-type menu)
@@ -214,6 +216,7 @@
             :name (text-id disable-auto-save)
             :scale #t
             :param3 (game-option-menu memcard-disable-auto-save))
+            :option-disabled-func (lambda () #t) ;; mod change - require autosave
        (new 'static
             'game-option
             :option-type (game-option-type menu)

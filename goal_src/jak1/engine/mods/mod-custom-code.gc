@@ -107,6 +107,13 @@
   ;; play hints off (why do they keep turning on?)
   (false! (-> *setting-control* default play-hints))
 
+  ;; force autosave in slot 0 if somehow we dont have one (e.g. debug mode boot)
+  (when (not (-> *setting-control* current auto-save))
+    (format 0 "NO AUTOSAVE DETECTED, CREATING ONE FOR SLOT 0 NOW~%")
+    (set! (-> *game-info* auto-save-which) 0)
+    (auto-save-command 'auto-save 0 (-> *game-info* auto-save-which) *default-pool*)
+    )
+
   ;; close most tasks
   (dotimes (i (game-task max))
     (case i

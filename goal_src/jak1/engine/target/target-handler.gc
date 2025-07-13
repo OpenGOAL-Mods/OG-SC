@@ -475,9 +475,10 @@
 (define-extern *mod-vent-checkpoint?* symbol)
 (define-extern store-temp-checkpoint (function none))
 (define-extern *tmp-continue-point* continue-point)
+(define *last-vent-checkpoint-time* (the-as time-frame #f))
 (defbehavior target-standard-event-handler target ((arg0 process) (arg1 int) (arg2 symbol) (arg3 event-message-block))
   (case arg2
-    ;; mod change - health regen and checkpoint (TODO) in blue vents
+    ;; mod change - health regen and checkpoint+autosave in blue vents
     (('venting)
       (when (= (-> arg3 param 0) (pickup-type eco-blue))
         (when *mod-hp-regen?*
@@ -492,9 +493,13 @@
               (set! (-> self fact eco-pill) 0.0))
             )
           )
-        (when *mod-vent-checkpoint?*
+        ;; if it's been 10s since last checkpoint/autosave, do the things
+        (when (and *mod-vent-checkpoint?*
+                   (or (not *last-vent-checkpoint-time*)
+                       (time-elapsed? *last-vent-checkpoint-time* (seconds 10))))
           (store-temp-checkpoint)
           (set-continue! *game-info* *tmp-continue-point*)
+          (auto-save-command 'auto-save 0 (-> *game-info* auto-save-which) *default-pool*)
           )
         )
       )

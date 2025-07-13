@@ -261,7 +261,9 @@
        (new 'static 'game-option :option-type (game-option-type button) :scale #f)
        (new 'static 'game-option :option-type (game-option-type button) :scale #f)
        (new 'static 'game-option :option-type (game-option-type button) :scale #f)
-       (new 'static 'game-option :option-type (game-option-type button) :name (text-id continue-without-saving) :scale #f)
+       (new 'static 'game-option :option-type (game-option-type button) :name (text-id continue-without-saving) :scale #f
+          :option-disabled-func (lambda () #t) ;; mod change - require save/autosave
+          )
        (new 'static 'game-option :option-type (game-option-type button) :name (text-id back) :scale #f)))
 
 ;; maps options to a progress screen
