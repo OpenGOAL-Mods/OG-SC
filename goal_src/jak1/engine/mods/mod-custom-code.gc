@@ -148,6 +148,12 @@
     )
 
   ;; kill some entities that don't respect their task status
+  ;; beach
+  (complete-entity-if-exists "ecoventrock-7")
+  (complete-entity-if-exists "ecoventrock-4")
+  (complete-entity-if-exists "ecoventrock-5")
+  (complete-entity-if-exists "ecoventrock-3")
+  (complete-entity-if-exists "ecoventrock-6")
   ;; jungle
   (complete-entity-if-exists "reflector-mirror-2")
   (complete-entity-if-exists "periscope-11")
@@ -178,6 +184,31 @@
   (complete-entity-if-exists "gnawer-12")
   (complete-entity-if-exists "gnawer-16")
   (complete-entity-if-exists "gnawer-11")
+  (complete-entity-if-exists "dark-crystal-1")
+  (complete-entity-if-exists "dark-crystal-3")
+  (complete-entity-if-exists "dark-crystal-4")
+  (complete-entity-if-exists "dark-crystal-5")
+  ;; darkcave
+  (complete-entity-if-exists "dark-crystal-2")
+  ;; snowy
+  (complete-entity-if-exists "snow-bumper-72")
+  (complete-entity-if-exists "snow-bumper-73")
+  (complete-entity-if-exists "snow-bumper-81")
+  (complete-entity-if-exists "snow-bumper-79")
+  (complete-entity-if-exists "snow-bumper-78")
+  (complete-entity-if-exists "snow-bumper-70")
+  (complete-entity-if-exists "snow-bumper-71")
+  (complete-entity-if-exists "snow-bumper-69")
+  (complete-entity-if-exists "snow-bumper-80")
+  (complete-entity-if-exists "snow-bumper-74")
+  (complete-entity-if-exists "snow-bumper-75")
+  (complete-entity-if-exists "snow-bumper-77")
+  (complete-entity-if-exists "snow-bumper-76")
+  (complete-entity-if-exists "ram-15")
+  (complete-entity-if-exists "ram-8")
+  (complete-entity-if-exists "ram-7")
+  (complete-entity-if-exists "ram-14")
+  (complete-entity-if-exists "ram-13")
   ;; citadel
   (complete-entity-if-exists "citb-generator-1")
   (complete-entity-if-exists "citb-generator-2")
