@@ -235,8 +235,11 @@
       ((= v1-65 'play)
        ;; don't allow pausing/start menu
        (when *target*
-         (set-setting *setting-control* *target* 'allow-pause #f 0.0 0)
-         (set-setting *setting-control* *target* 'allow-progress #f 0.0 0)
+         ;; mod change - idk set settings this way so it doesn't break progress screen after death
+         (set-setting! 'allow-pause #f 0.0 0)
+         (set-setting! 'allow-progress #f 0.0 0)
+         ;;  (set-setting *setting-control* *target* 'allow-pause #f 0.0 0)
+         ;;  (set-setting *setting-control* *target* 'allow-progress #f 0.0 0)
          (apply-settings *setting-control*))
        ;; send the auto-save process a 'die message
        (send-event (handle->process (-> *game-info* auto-save-proc)) 'die)

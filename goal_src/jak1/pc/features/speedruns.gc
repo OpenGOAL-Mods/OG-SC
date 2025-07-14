@@ -476,7 +476,7 @@
   ;;   )
   (when *full-blue?*
     (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc))
-    (pickup-collectable! (-> *target* fact) (pickup-type eco-green) 4.0 (process->handle (-> *target* fact process)))
+    (set! (-> *target* fact health) 3.0)
     (set! (-> *target* fact eco-pill) 50.0) ;; 4HP
     )
   (none)

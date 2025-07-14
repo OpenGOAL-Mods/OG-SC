@@ -271,6 +271,7 @@
                         (v1-235 (entity-by-name "assistant-lavatube-end-3")))
                     (s3-7 (if v1-235 (-> v1-235 extra process)) s4-13))))
               (set-continue! *game-info* "lavatube-end")))
+           (runs-on-jak-spawn) ;; trigger hook for mod base
            (go target-warp-in s5-6 (-> arg0 trans))))
         (else (suspend-for (seconds 0.05))))
       (set-continue! *game-info* arg0)
@@ -928,7 +929,20 @@
              (suspend)
              0))))
       (set! (-> self control transv quad) (the-as uint128 0))
-      (initialize! (-> self game) 'dead (the-as game-save #f) (the-as string #f))
-      (set-time! (-> self state-time))
-      (anim-loop))
+      ;; mod change - prefer to reload save instead of just respawning
+      (cond
+        ((< (-> *game-info* auto-save-which) 0)
+          ;; no autosave, lets hope we dont hit this
+          (initialize! (-> self game) 'dead (the-as game-save #f) (the-as string #f))
+          (anim-loop)
+          )
+        (else
+          ;; load from save
+          (set-blackout-frames (seconds 0.5))
+          (auto-save-command 'restore 0 (-> *game-info* auto-save-which) self)
+          (set-time! (-> self state-time))
+          ;; (skip anim-loop cuz it suspends and breaks shit)
+          )
+        )
+      )
   :post target-no-stick-post)

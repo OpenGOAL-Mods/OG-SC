@@ -612,6 +612,7 @@
   ((-> self control unknown-surface01 active-hook))
   ;; mod change - health drain if no blue eco
   (when (and *mod-hp-drain?*
+             (nonzero? (-> self fact health))
              (not (logtest? (-> *target* state-flags) (state-flags being-attacked dying)))
              (not (and (= (-> self fact eco-type) (pickup-type eco-blue))
                        (< 0.0 (-> self fact eco-level)))))

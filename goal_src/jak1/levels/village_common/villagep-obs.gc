@@ -31,8 +31,6 @@
       (clear-collide-with-as (-> self control))
       (ja-channel-set! 0)
       (vector-reset! (-> self control transv))
-      (send-event self 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc)) ;; mod change - full blue eco on warp in
-      (set! (-> self fact eco-pill) 50.0) ;; 4HP
       (move-to-point! (-> self control) (-> self control unknown-vector102))
       (suspend-for (seconds 1))
       (let ((gp-1 (new-stack-vector0)))
