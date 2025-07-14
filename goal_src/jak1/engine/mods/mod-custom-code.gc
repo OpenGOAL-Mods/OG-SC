@@ -107,13 +107,6 @@
   ;; play hints off (why do they keep turning on?)
   (false! (-> *setting-control* default play-hints))
 
-  ;; force autosave in slot 0 if somehow we dont have one (e.g. debug mode boot)
-  (when (not (-> *setting-control* current auto-save))
-    (format 0 "NO AUTOSAVE DETECTED, CREATING ONE FOR SLOT 0 NOW~%")
-    (set! (-> *game-info* auto-save-which) 0)
-    (auto-save-command 'auto-save 0 (-> *game-info* auto-save-which) *default-pool*)
-    )
-
   ;; close most tasks
   (dotimes (i (game-task max))
     (case i
@@ -289,6 +282,26 @@
   ;; Code here runs every time jak spawns (loading a file new game or death)
   ;;uncomment this to use custom music for custom levels - the function is in mod-common-functions.gc
   ;;(process-spawn-function process music-manager-proc)
+  
+  ;; fix some pause shit
+  (remove-setting *setting-control* *target* 'allow-pause)
+  (remove-setting *setting-control* *target* 'allow-progress)
+  (apply-settings *setting-control*)
+  
+  ;; full HP and blue eco
+  (send-event *target* 'get-pickup (pickup-type eco-blue) (-> *FACT-bank* eco-full-inc)) ;; mod change - full blue eco on spawn
+  (set! (-> *target* fact health) 3.0)
+  (set! (-> *target* fact eco-pill) 50.0) ;; 4HP
+
+  ;; make sure we have an autosave, defaulting to slot 0
+  (when (< (-> *game-info* auto-save-which) 0)
+    (format 0 "TARGET SPAWN - NO AUTOSAVE DETECTED, CREATING ONE FOR SLOT 0 NOW~%")
+    ;; make sure its enabled
+    (set! (-> *setting-control* current auto-save) #t)
+    (set! (-> *setting-control* default auto-save) #t)
+    (auto-save-command 'save 0 0 *default-pool*)
+    )
+
   (none))
 
 (defun runs-on-jak-death ((death-event symbol))
