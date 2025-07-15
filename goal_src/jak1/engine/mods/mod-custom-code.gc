@@ -214,6 +214,8 @@
   (complete-entity-if-exists "citb-generator-2")
   (complete-entity-if-exists "citb-generator-3")
   (complete-entity-if-exists "citb-generator-4")
+  (let ((bc (entity-by-name "citb-battlecontroller-1")))
+    (when bc (set! (-> bc extra perm user-int8 0) 1)))
   (complete-entity-if-exists "citb-generator-5")
   (complete-entity-if-exists "citb-generator-6")
   (complete-entity-if-exists "citb-generator-7")
