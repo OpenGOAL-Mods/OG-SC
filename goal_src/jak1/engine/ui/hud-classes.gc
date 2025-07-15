@@ -1465,6 +1465,13 @@
   0
   (none))
 
+(defun show-hud-health ()
+  (when (and *target* (or (not *progress-process*) (hidden? (-> *progress-process* 0))))
+    (when (-> *hud-parts* health) 
+      (send-event (ppointer->process (-> *hud-parts* health)) 'show)))
+  0
+  (none))
+
 (defun set-hud-aspect-ratio ((arg0 symbol) (arg1 symbol))
   (let ((gp-0 (= arg0 'aspect16x9))
         (s5-0 (= arg1 'pal)))

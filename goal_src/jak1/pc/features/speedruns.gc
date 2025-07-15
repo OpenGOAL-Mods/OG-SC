@@ -549,8 +549,12 @@
       (set! *last-real-continue-point* (-> *game-info* current-continue))
       )
     (set! (-> *game-info* current-continue) *tmp-continue-point*)
-    (initialize! *game-info* 'dead (the-as game-save #f) (the-as string #f))
-    (enforce-speedrun-pc-settings) ;; (speedrun-reset-common-settings)
+    (process-spawn-function process
+      (lambda ()
+        (initialize! *game-info* 'dead (the-as game-save #f) (the-as string #f))
+        (enforce-speedrun-pc-settings) ;; (speedrun-reset-common-settings)
+        )
+      )
     )
   (none)
   )
@@ -718,7 +722,9 @@
     (set! *practice-spawn-post-init* #f)
     )
 
-  (when (and *debug-segment* (or (cpad-hold? 0 l2) (cpad-pressed? 0 l2)))
+  (when (and *debug-segment* 
+             (not *progress-process*)
+             (or (cpad-hold? 0 l2) (cpad-pressed? 0 l2)))
     (cond
       ((cpad-pressed? 0 up) ;; Check for fast reset combo
         (format #t "player triggered reset combo~%")

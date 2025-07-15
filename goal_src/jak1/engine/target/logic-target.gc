@@ -606,6 +606,7 @@
 
 (define-extern *mod-hp-drain?* symbol)
 (define-extern *mod-hp-speed-effect?* symbol)
+(define-extern show-hud-health (function none))
 (defbehavior flag-setup target ()
   (level-setup)
   (set! (-> self control unknown-vector10 quad) (-> self control transv quad))
@@ -630,6 +631,7 @@
           (when (< (-> self fact eco-pill) 0.0)
             (-! (-> self fact health) 1.0)
             (set! (-> self fact eco-pill) 49.0))
+          (show-hud-health)
           ;; deadge
           (when (<= (-> self fact health) 0.0)
             (send-event self 'attack-invinc #f (static-attack-info ((mode 'generic)))))
