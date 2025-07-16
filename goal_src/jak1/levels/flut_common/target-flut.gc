@@ -1193,7 +1193,21 @@
            (suspend)
            (ja :num! (seek!)))))
       (set! (-> self control transv quad) (the-as uint128 0))
-      (initialize! (-> self game) 'dead (the-as game-save #f) (the-as string #f))
+      ;; mod change - prefer to reload save instead of just respawning
+      (cond
+        ((< (-> *game-info* auto-save-which) 0)
+          ;; no autosave, lets hope we dont hit this
+          (initialize! (-> self game) 'dead (the-as game-save #f) (the-as string #f))
+          (anim-loop)
+          )
+        (else
+          ;; load from save
+          (set-blackout-frames (seconds 0.5))
+          (auto-save-command 'restore 0 (-> *game-info* auto-save-which) self)
+          (set-time! (-> self state-time))
+          ;; (skip anim-loop cuz it suspends and breaks shit)
+          )
+        )
       (set-time! (-> self state-time))
       (until v1-104
         (suspend)
