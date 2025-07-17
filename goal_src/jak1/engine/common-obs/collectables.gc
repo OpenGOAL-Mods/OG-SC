@@ -1775,24 +1775,15 @@
           (lambda ((arg0 vent))
             (not (logtest? (-> arg0 blocker extra perm status) (entity-perm-status complete))))))
   (set! (-> this show-particles) #t)
-  ;; mod change - vanilla blue eco vents in hub1 blocked
-  (when (= (-> this fact pickup-type) (pickup-type eco-blue))
-    (logior! (-> this fact options) (fact-options vent-blocked vent-valve)))
   (when (logtest? (-> this fact options) (fact-options vent-blocked))
     (when (logtest? (-> this fact options) (fact-options vent-valve))
       (case (-> this fact pickup-type)
         (((pickup-type eco-blue))
-         (set! (-> this block-func)
-            (lambda ((arg0 vent))
-              (case (-> (level-get-target-inside *level*) name)
-                (('training 'village1 'beach 'jungle 'jungleb 'misty 'firecanyon)
-                  #t
-                  )
-                (else
-                  #f
-                  )
-                )
-              ))
+         ;; mod change - vanilla blue eco vents in hub1 blocked
+         (case (-> arg0 extra level name)
+          (('training 'village1 'beach 'jungle 'jungleb 'misty 'firecanyon)
+            (logior! (-> this fact options) (fact-options vent-blocked vent-valve))
+            (set! (-> this block-func) (lambda ((arg0 vent)) #t))))
         ;;        (the-as (function vent symbol) (lambda () (not (task-complete? *game-info* (game-task jungle-eggtop))))))
           )
         (((pickup-type eco-red))
