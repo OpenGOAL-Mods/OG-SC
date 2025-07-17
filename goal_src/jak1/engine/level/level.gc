@@ -116,6 +116,10 @@
     (if (not (null? (-> this info packages))) (load-package "common" global)))
   this)
 
+(defun level-loaded? ((lvl symbol))
+  (or (= (-> *level* level0 name) lvl) (= (-> *level* level1 name) lvl))
+  )
+
 ;;;;;;;;;;;;;;
 ;; vis
 ;;;;;;;;;;;;;;

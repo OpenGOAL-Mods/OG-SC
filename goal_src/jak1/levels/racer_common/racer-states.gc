@@ -834,9 +834,13 @@
       (rot->dir-targ! (-> self control))
       (set! (-> self racer rot y) (y-angle (-> self control)))
       (when *target*
-        (when (or (= (-> *target* current-level name) 'lavatube)
-                  (= (-> *target* current-level name) 'firecanyon)
-                  (= (-> *target* current-level name) 'citadel))
+        ;; mod change - check loaded levels instead of current-level which depends on continue-point/bsp
+        ;; (when (or (= (-> *target* current-level name) 'lavatube)
+        ;;           (= (-> *target* current-level name) 'firecanyon)
+        ;;           (= (-> *target* current-level name) 'citadel))
+        (when (or (level-loaded? 'lavatube)
+                  (level-loaded? 'firecanyon)
+                  (level-loaded? 'citadel))
           (set! (-> *hud-parts* bike-heat) (process-spawn hud-bike-heat :init hud-init-by-other 0 :to self))
           (set! (-> *hud-parts* buzzers 0 next-y-offset) -120)
           (set! (-> *hud-parts* buzzers 0 y-sgn) 0)

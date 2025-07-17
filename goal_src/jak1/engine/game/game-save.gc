@@ -1065,7 +1065,8 @@
         (set! loading-level (the-as kheap gp-0))
         ;0
         (when *debug-segment*
-          (debug-print (-> self save) (user? dass)))
+          (format 0 "save auto-save~%"))
+          ;; (debug-print (-> self save) (user? dass)))
         (label cfg-7)
         (set! (-> self result)
               (mc-save (-> self card) (-> self which) (&-> (-> self save) type) (the-as int (-> self save info-int32))))
