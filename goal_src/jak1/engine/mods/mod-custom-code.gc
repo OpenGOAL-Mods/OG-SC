@@ -50,7 +50,7 @@
 (defun draw-unlock-info ()
   (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
     ;; play unlock sound effect if we just met the req from last frame
-    (when (and (nonzero? *next-unlock-req*) (= *next-unlock-req* (-> *game-info* money-total)))
+    (when (and (nonzero? *next-unlock-req*) (= *next-unlock-req* (-> *game-info* money)))
       (play-sound-file "ee-rr.mp3" (the int (-> *setting-control* default sfx-volume)))
       )
     
@@ -60,7 +60,7 @@
     (iterate-process-tree *default-pool*
       (lambda ((this process)) 
         (let ((req (get-orb-req this)))
-          (when (and (> req (-> *game-info* money-total))
+          (when (and (> req (-> *game-info* money))
                      (or (not *next-unlock-ptr*)
                          (< req *next-unlock-req*)))
               (set! *next-unlock-ptr* (process->ppointer this))
@@ -86,9 +86,9 @@
           ;;     )
           ;;   )
           (format *next-unlock-str* "~D Orb~S (~D/~D)"
-            (the int (- *next-unlock-req* (-> *game-info* money-total)))
-            (if (> (- *next-unlock-req* (-> *game-info* money-total)) 1) "s" "") ;; optional s :)
-            (the int (-> *game-info* money-total))
+            (the int (- *next-unlock-req* (-> *game-info* money)))
+            (if (> (- *next-unlock-req* (-> *game-info* money)) 1) "s" "") ;; optional s :)
+            (the int (-> *game-info* money))
             (the int *next-unlock-req*)
             )
           )

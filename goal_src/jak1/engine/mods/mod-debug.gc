@@ -51,6 +51,9 @@
     (debug-menu-append-item mod-misc-menu (new-dm-bool "HP Regen" *mod-hp-regen?* dm-boolean-toggle-pick-func))
     (debug-menu-append-item mod-misc-menu (new-dm-bool "HP/Speed Effect" *mod-hp-speed-effect?* dm-boolean-toggle-pick-func))
     (debug-menu-append-item mod-misc-menu (new-dm-bool "Blue Vent Checkpoints" *mod-vent-checkpoint?* dm-boolean-toggle-pick-func))
+    (debug-menu-append-item mod-misc-menu (new-dm-var-float "Orbs" (the int #f) (dm-lambda-float-var (-> *game-info* money)) 1.0 0.0 2000.0))
+    (debug-menu-append-item mod-misc-menu (new-dm-var-float "Orbs (faster)" (the int #f) (dm-lambda-float-var (-> *game-info* money)) 10.0 0.0 2000.0))
+    
     (new-dm-submenu "Supercharged" mod-misc-menu)
     )
   )
