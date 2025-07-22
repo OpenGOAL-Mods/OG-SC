@@ -349,6 +349,7 @@
           ))))
   0)
 
+(define *bg-a* 0.0)
 (defbehavior display-loop process ()
   "the main 'display loop' in GOAL. v-sync is done in this function, so all frames start and end here."
   ;; increase our stack size.
@@ -455,7 +456,7 @@
         ;; add blackout effect
         (if (< (current-time) (-> *game-info* blackout-time))
           (set! (-> *setting-control* default bg-a-force) 1.0)
-          (set! (-> *setting-control* default bg-a-force) 0.0))
+          (set! (-> *setting-control* default bg-a-force) *bg-a*))
         (read! (-> *perf-stats* data (perf-stat-bucket all-code)))
         ;; grab a buffer for drawing debug stuff.
         ;; we might draw even outside of debug mode if cheat-mode is disabled.
