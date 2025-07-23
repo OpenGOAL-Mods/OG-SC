@@ -176,7 +176,7 @@
 
 ;; The engine system is used to link collision checks with processes.
 ;; This allows you to have lists of processes where the process will remove itself when it dies.
-(define *collide-hit-by-player-list* (new 'global 'engine 'collide-hit-by-player-list 768))
+(define *collide-hit-by-player-list* (new 'global 'engine 'collide-hit-by-player-list 2048))
 
 (define *collide-usually-hit-by-player-list* (new 'global 'engine 'collide-usually-hit-by-player-list 256))
 
