@@ -119,7 +119,8 @@
         )
       (((game-task finalboss-movies))
         ;; close unless we're in superdupercharged mode
-        (when (not (task-closed? (the-as game-task i) (task-status need-reward-speech))) ;; TODO - add supercharged check
+        (when (and (not *mod-hard-mode?*)
+                   (not (task-closed? (the-as game-task i) (task-status need-reward-speech))))
           (close-specific-task! (the-as game-task i) (task-status need-reward-speech))
           )
         )
@@ -220,7 +221,8 @@
   (complete-entity-if-exists "citb-generator-6")
   (complete-entity-if-exists "citb-generator-7")
   ;; finalboss
-  (kill-entity-if-exists "robotboss-3") ;; TODO - add supercharged check
+  (when (not *mod-hard-mode?*)
+    (kill-entity-if-exists "robotboss-3"))
 
   ;; draw the info about next unlockable
   (draw-unlock-info)
