@@ -805,11 +805,12 @@
       (process-entity-status! self (entity-perm-status dead) #t)
       (runs-on-orb-pickup (ppointer->process (-> self parent))) ;; trigger hook for mod base
       (convert-to-hud-object self (the-as hud (ppointer->process (-> *hud-parts* money)))))
-  :exit
-    (behavior ()
-      ;; refresh orb-placer list in debug mode
-      (when *debug-segment*
-        (orb-placer-list-maintenance #t))))
+  ;; :exit
+  ;;   (behavior ()
+  ;;     ;; refresh orb-placer list in debug mode
+  ;;     (when *debug-segment*
+  ;;       (orb-placer-list-maintenance #t)))
+    )
 
 (defmethod initialize ((this money))
   (stack-size-set! (-> this main-thread) 192) ;; og:preserve-this hack increased from 128

@@ -302,7 +302,7 @@
         (deactivate obj)
         (set! (-> *orb-placer-orbs* *orb-placer-selected-idx*) obj2-handle)
         ;; (orb-placer-highlight (handle-process obj2) #t)
-        (orb-placer-list-maintenance #t)
+        ;; (orb-placer-list-maintenance #t)
         )
       )
     )
