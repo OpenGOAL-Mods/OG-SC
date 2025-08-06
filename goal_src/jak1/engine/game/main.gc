@@ -392,7 +392,10 @@
           (dotimes (a0-8 (-> *level* length))
             (let ((a1-6 (-> *level* level a0-8)))
               (when (= (-> a1-6 status) 'active)
-                (if (and (= (-> a1-6 name) v1-13) (-> *level* play?)) (set! (-> *setting-control* default music) (-> a1-6 info music-bank)))))))
+                ;; mod change - use vis-nick level first
+                ;; (if (and (= (-> a1-6 name) v1-13) (-> *level* play?))
+                (if (and (name= (-> a1-6 nickname) (-> *load-state* vis-nick)) (-> *level* play?))
+                  (set! (-> *setting-control* default music) (-> a1-6 info music-bank)))))))
         (set! (-> *setting-control* default sound-flava) (the-as uint 49))
         (set! (-> *setting-control* default sound-flava-priority) 0.0)
         ;; find any ambients, and execute them.

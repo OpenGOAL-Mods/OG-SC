@@ -720,7 +720,7 @@
       (('ventblue 'ventred 'ventgreen 'ventyellow 'eco-red 'eco-blue 'eco-green 'eco-yellow)
         (return #t) ;; always show
         )
-      (('fuel-cell 'crate-buzzer)
+      (('fuel-cell 'crate-buzzer 'babak-with-cannon 'muse 'balloonlurker)
         (return #f) ;; always hide
         )
       )
@@ -953,6 +953,11 @@
   "Get the level target is in, or one it is close to.
    The distance checks do not work."
   (let ((target-trans (target-pos 0)))
+    ;; mod change - trust vis-nick over continue since we disabled checkpoint boundaries
+    (let ((current-nick (-> *load-state* vis-nick)))
+      (dotimes (i (-> this length))
+        (let ((ilev (-> this level i))) (when (= (-> ilev status) 'active) (if (name= (-> ilev nickname) current-nick) (return ilev))))))
+    ;; vanilla logic as backup ig
     (let ((current-level (-> *game-info* current-continue level)))
       (dotimes (i (-> this length))
         (let ((ilev (-> this level i))) (when (= (-> ilev status) 'active) (if (= (-> ilev name) current-level) (return ilev))))))

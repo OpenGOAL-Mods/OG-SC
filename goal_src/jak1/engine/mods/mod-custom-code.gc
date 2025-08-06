@@ -298,7 +298,7 @@
   (set! (-> *target* fact eco-pill) 50.0) ;; 4HP
 
   ;; make sure we have an autosave, defaulting to slot 0
-  (when (< (-> *game-info* auto-save-which) 0)
+  (when (and (not *debug-segment*) (< (-> *game-info* auto-save-which) 0))
     (format 0 "TARGET SPAWN - NO AUTOSAVE DETECTED, CREATING ONE FOR SLOT 0 NOW~%")
     ;; make sure its enabled
     (set! (-> *setting-control* current auto-save) #t)
