@@ -746,7 +746,8 @@
     (dotimes (s2-0 3)
       (let* ((s0-0 (-> this prize s2-0))
              (v1-17 (ash 1 s2-0))
-             (s1-1 (logtest? v1-17 (-> this challenges-mask))))
+             (s1-1 #t)) ;; mod change - all pipe game challenges complete
+            ;;  (s1-1 (logtest? v1-17 (-> this challenges-mask))))
         (eval-path-curve-div! (-> this path) (-> s0-0 jar-pos) (the float (* s2-0 2)) 'interp)
         (eval-path-curve-div! (-> this path) (-> s0-0 far-pos) (the float (+ (* s2-0 2) 1)) 'interp)
         (set! (-> s0-0 sucked-up-jar-part-pos quad) (-> s0-0 jar-pos quad))

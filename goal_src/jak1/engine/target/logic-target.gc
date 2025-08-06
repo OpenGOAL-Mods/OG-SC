@@ -642,6 +642,7 @@
   ;; mod change - tweak speed based on HP
   (let ((scale (cond
                 ((not *mod-hp-speed-effect?*) 1.0) ;; feature disabled
+                ((send-event self 'query 'powerup (pickup-type eco-blue)) 1.0) ;; actively channeling blue eco - normal
                 ((and (>= (-> self fact health) 3.0) (>= (-> self fact eco-pill) 50.0)) 1.0) ;; 4HP - 100%
                 ((>= (-> self fact health) 3.0) 0.75) ;; 3HP - 75%
                 ((>= (-> self fact health) 2.0) 0.5) ;; 2HP - 50%
