@@ -1109,7 +1109,10 @@
          ;; 90% full! set count very large to try to fix this and complain.
          (set! count 1000)
          (when (and *debug-segment* (-> *kernel-context* low-memory-message))
-           (format *stdcon* "~3LLow Actor Memory~%~0L")))
+           (format *stdcon* "~3LLow Actor Memory ~F pct free (~,,0fK/~,,0fK)~0L~%"
+             (* 100.0 perc)
+             (* 0.0009765625 (the float free))
+             (* 0.0009765625 (the float total)))))
         ((< perc 0.2)
          ;; 80% full, try 4x harder
          (set! count (* count 4)))
@@ -2016,7 +2019,7 @@
 (if *debug-segment* (define *debug-dead-pool* (new 'debug 'dead-pool-heap '*debug-dead-pool* 768 (* 1024 1024))))
 
 ;; variable sized actor pool (most actors go here)
-(define *nk-dead-pool* (new 'global 'dead-pool-heap '*nk-dead-pool* (* PROCESS_HEAP_MULT 768) PROCESS_HEAP_SIZE))
+(define *nk-dead-pool* (new 'global 'dead-pool-heap '*nk-dead-pool* (* PROCESS_HEAP_MULT 1024) PROCESS_HEAP_SIZE))
 
 ;; use the nk-dead-pool in most places
 (define *default-dead-pool* (the dead-pool *nk-dead-pool*))
