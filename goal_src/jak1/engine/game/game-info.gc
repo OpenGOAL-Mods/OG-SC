@@ -191,6 +191,7 @@
                       ((!= *kernel-boot-message* 'play) "demo-start")
                       (*debug-segment* "village1-hut")
                       (else "title-start")))
+     (define-extern *outrag-event-idx* int) (set! *outrag-event-idx* 0)
      (set! (-> this auto-save-count) 0)
      (set! (-> *setting-control* default auto-save) #f)
      (set! (-> this money) 0.0)

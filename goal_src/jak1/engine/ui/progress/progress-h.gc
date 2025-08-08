@@ -133,6 +133,8 @@
      (save-and-load-game)
      (memcard-saving-and-loading)
      (memcard-data-exists-save-and-load)
+     (title-sdc)
+     (save-game-title-sdc)
      ;; the last one!
      (max))
    (defenum game-option-type

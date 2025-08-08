@@ -591,6 +591,7 @@
   :code anim-loop
   :post target-no-move-post)
 
+(define-extern *outrag-sdc-unlocked?* symbol)
 (defstate target-title-wait (target)
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
@@ -624,7 +625,9 @@
       (when (cpad-pressed? 0 start)
         (set-setting! 'allow-progress #t 0.0 0)
         (apply-settings *setting-control*)
-        (activate-progress *dproc* (progress-screen title))
+        (if *outrag-sdc-unlocked?*
+          (activate-progress *dproc* (progress-screen title-sdc))
+          (activate-progress *dproc* (progress-screen title)))
         (set-setting! 'allow-progress #f 0.0 0)
         (apply-settings *setting-control*))
       (when (and (< (mod (-> *display* real-frame-counter) 300) 270) (not *progress-process*))

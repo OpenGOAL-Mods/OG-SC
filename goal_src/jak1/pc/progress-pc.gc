@@ -803,6 +803,53 @@
             :param3 (game-option-menu quit-title))
        (new 'static 'game-option :option-type (game-option-type button) :name (text-id back) :scale #t)))
 
+(define *title-sdc-pc*
+  (new 'static
+       'boxed-array
+       :type
+       game-option
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id new-game)
+            :scale #t
+            :param3 (game-option-menu save-game-title)
+            :on-change (lambda () (set! *mod-hard-mode?* #f) (none))
+            :on-confirm (lambda () (set! *mod-hard-mode?* #f) (none)))
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id new-sdc-game)
+            :scale #t
+            :param3 (game-option-menu save-game-title-sdc)
+            :on-change (lambda () (set! *mod-hard-mode?* #t) (none))
+            :on-confirm (lambda () (set! *mod-hard-mode?* #t) (none)))
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id load-game)
+            :scale #t
+            :param3 (game-option-menu load-game))
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id options)
+            :scale #t
+            :param3 (game-option-menu settings-title))
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id secrets)
+            :scale #t
+            :param3 (game-option-menu secrets))
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id quit-game)
+            :scale #t
+            :param3 (game-option-menu quit-title))
+       (new 'static 'game-option :option-type (game-option-type button) :name (text-id back) :scale #t)))
+
 (define *speedrun-options*
   (new 'static
        'boxed-array
@@ -2090,6 +2137,7 @@
   (set! (-> *options-remap* (progress-screen save-game)) *save-options*)
   (set! (-> *options-remap* (progress-screen save-and-load-game)) *save-and-load-options*)
   (set! (-> *options-remap* (progress-screen save-game-title)) *save-options-title*)
+  (set! (-> *options-remap* (progress-screen save-game-title-sdc)) *save-options-title*)
   (set! (-> *options-remap* (progress-screen memcard-error-loading)) *ok-options*)
   (set! (-> *options-remap* (progress-screen memcard-error-saving)) *ok-options*)
   (set! (-> *options-remap* (progress-screen memcard-error-formatting)) *ok-options*)
@@ -2098,6 +2146,7 @@
   (set! (-> *options-remap* (progress-screen memcard-removed)) *ok-options*)
   (set! (-> *options-remap* (progress-screen memcard-no-data)) *yes-no-options*)
   (set! (-> *options-remap* (progress-screen title)) *title-pc*)
+  (set! (-> *options-remap* (progress-screen title-sdc)) *title-sdc*)
   (set! (-> *options-remap* (progress-screen settings-title)) *options*)
   (set! (-> *options-remap* (progress-screen auto-save)) *ok-options*)
   (set! (-> *options-remap* (progress-screen pal-change-to-60hz)) *yes-no-options*)
@@ -2213,7 +2262,7 @@
      (build-resolution-options))
     (((progress-screen flava-player)) (build-flava-player-options *progress-music*))
     (((progress-screen secrets))
-     (if (= (-> obj display-state-stack 0) (progress-screen title))
+     (if (or (= (-> obj display-state-stack 0) (progress-screen title)) (= (-> obj display-state-stack 0) (progress-screen title-sdc)))
        (set! (-> *options-remap* (-> obj display-state)) *secrets-title*)
        (set! (-> *options-remap* (-> obj display-state)) *secrets*)))
     (((progress-screen monitor)) (build-monitor-options))
@@ -2450,7 +2499,8 @@
                 (= (-> obj display-state) (progress-screen load-game))
                 (= (-> obj display-state) (progress-screen save-game))
                 (= (-> obj display-state) (progress-screen save-and-load-game))
-                (= (-> obj display-state) (progress-screen save-game-title)))
+                (= (-> obj display-state) (progress-screen save-game-title))
+                (= (-> obj display-state) (progress-screen save-game-title-sdc)))
             ;; no option selected, go back
             (cpad-clear! 0 square)
             (cpad-clear! 0 triangle)
@@ -2485,7 +2535,7 @@
                   (sound-play "select-option")
                   (set! (-> obj next-display-state) (the-as progress-screen (-> options (-> obj option-index) param3)))
                   (case (-> obj next-display-state)
-                    (((progress-screen load-game) (progress-screen save-game) (progress-screen save-and-load-game) (progress-screen save-game-title))
+                    (((progress-screen load-game) (progress-screen save-game) (progress-screen save-and-load-game) (progress-screen save-game-title) (progress-screen save-game-title-sdc))
                      (set! (-> obj next-display-state) (set-memcard-screen obj (-> obj next-display-state))))))))
               ((= (-> options (-> obj option-index) option-type) (game-option-type button))
                ;; a button. what?
@@ -2849,6 +2899,29 @@
                 (set! (-> obj next-display-state) (progress-screen memcard-loading))))
              (else (sound-play "cursor-options") (set! (-> obj next-display-state) (progress-screen invalid)))))
           (((progress-screen save-game) (progress-screen save-game-title))
+           (set! *mod-hard-mode?* #f)
+           (cond
+             ((< (-> obj option-index) 4)
+              (sound-play "start-options")
+              (set! (-> *progress-state* which) (-> obj option-index))
+              ;; save slot selected
+              (if (zero? (-> s5-0 file (-> obj option-index) present))
+                (set! (-> obj next-display-state) (progress-screen memcard-saving))
+                (set! (-> obj next-display-state) (progress-screen memcard-data-exists))))
+             ;; mod change - dont allow continue without saving
+            ;;  ((and (= (-> obj display-state) (progress-screen save-game-title)) (= (-> obj option-index) 4))
+            ;;   (sound-play "starts-options")
+            ;;   (sound-volume-off)
+            ;;   (set! (-> *game-info* mode) 'play)
+            ;;   (if (= (-> *pc-settings* speedrunner-mode?) #t)
+            ;;     ;; Start a new game differently if speedrunning mode is active
+            ;;     (speedrun-start-full-game-run)
+            ;;     ;; start the game normally
+            ;;     (initialize! *game-info* 'game (the-as game-save #f) "intro-start"))
+            ;;   (set-master-mode 'game))
+             (else (sound-play "cursor-options") (set! (-> obj next-display-state) (progress-screen invalid)))))
+          (((progress-screen save-game-title-sdc))
+           (set! *mod-hard-mode?* #t)
            (cond
              ((< (-> obj option-index) 4)
               (sound-play "start-options")
@@ -2879,9 +2952,14 @@
               (set! (-> obj next-display-state) (progress-screen memcard-saving)))
              (else
               (sound-play "cursor-options")
-              (if (= (-> obj display-state-stack 0) (progress-screen title))
-                (set! (-> obj next-display-state) (progress-screen save-game-title))
-                (set! (-> obj next-display-state) (progress-screen save-game))))))
+              (case (-> obj display-state-stack 0)
+                (((progress-screen title))
+                  (set! (-> obj next-display-state) (progress-screen save-game-title)))
+                (((progress-screen title-sdc))
+                  (set! (-> obj next-display-state) (progress-screen save-game-title-sdc)))
+                (else
+                  (set! (-> obj next-display-state) (progress-screen save-game))))
+              )))
           (((progress-screen memcard-data-exists-save-and-load))
            (cond
              ((-> *progress-state* yes-no-choice)
@@ -3455,7 +3533,7 @@
           (progress-screen memcard-creating))
          (draw-memcard-accessing obj a1-1))
         (((progress-screen memcard-insert)) (draw-memcard-insert obj a1-1))
-        (((progress-screen load-game) (progress-screen save-game) (progress-screen save-and-load-game) (progress-screen save-game-title))
+        (((progress-screen load-game) (progress-screen save-game) (progress-screen save-and-load-game) (progress-screen save-game-title) (progress-screen save-game-title-sdc))
          (draw-memcard-file-select obj a1-1))
         (((progress-screen memcard-auto-save-error)) (draw-memcard-auto-save-error obj a1-1))
         (((progress-screen memcard-removed)) (draw-memcard-removed obj a1-1))
@@ -3507,6 +3585,9 @@
               (progress-screen monitor))
              (hide-progress-icons)
              (draw-options self 115 25 0.82))
+            (((progress-screen title-sdc))
+             (hide-progress-icons)
+             (draw-options self 115 25 0.68))
             (((progress-screen settings) (progress-screen settings-title)) (hide-progress-icons) (draw-options self 115 25 0.78))
             (((progress-screen misc-options)) (hide-progress-icons) (draw-options self 115 25 0.79))
             (((progress-screen music-player)) (hide-progress-icons) (draw-options self 128 21 0.82))
@@ -3567,7 +3648,7 @@
               (progress-screen memcard-formatting)
               (progress-screen memcard-creating))
              (draw-notice-screen self))
-            (((progress-screen save-game-title)) (draw-notice-screen self) (draw-options self 169 15 0.6))
+            (((progress-screen save-game-title) (progress-screen save-game-title-sdc)) (draw-notice-screen self) (draw-options self 169 15 0.6))
             (else (format 0 "PROGRESS - You forgot to add a `progress-screen` case to draw options!")))
           (when stats?
             (let* ((v1-98 (cond
@@ -3607,7 +3688,7 @@
         (set! (-> self particles 32 init-pos x) -320.0)
         (set! (-> self particles 33 init-pos x) -320.0)
         (case (-> self display-state)
-          (((progress-screen load-game) (progress-screen save-game) (progress-screen save-and-load-game) (progress-screen save-game-title))
+          (((progress-screen load-game) (progress-screen save-game) (progress-screen save-and-load-game) (progress-screen save-game-title) (progress-screen save-game-title))
            (set! (-> self transition-speed) 30.0)))
         (none)))
 
@@ -3687,6 +3768,7 @@
                    (= v1-74 (progress-screen save-game))
                    (= v1-74 (progress-screen save-and-load-game))
                    (= v1-74 (progress-screen save-game-title))
+                   (= v1-74 (progress-screen save-game-title-sdc))
                    (= v1-74 (progress-screen memcard-error-loading))
                    (= v1-74 (progress-screen memcard-error-saving))
                    (= v1-74 (progress-screen memcard-error-formatting))
