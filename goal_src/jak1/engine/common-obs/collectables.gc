@@ -703,7 +703,8 @@
   (set! (-> self orb-req) orb-req)
   (set! (-> self block-func)
     (lambda ((arg0 eco-collectable))
-      (< (-> *game-info* money) (-> arg0 orb-req)))) ;; blocked until you reach orb threshold
+      (or (> (vector-vector-distance (target-pos 0) (-> arg0 root trans)) (meters 220)) ;; blocked if you too far away
+          (< (-> *game-info* money) (-> arg0 orb-req))))) ;; blocked until you reach orb threshold
   (if (logtest? (fact-options eco-blocked) (-> self fact options)) (go-virtual blocked))
   (if ((-> self block-func) self) (go-virtual blocked))
   (go-virtual wait)
@@ -1954,7 +1955,8 @@
   (logior! (-> self fact options) (fact-options vent-blocked))
   (set! (-> self block-func)
         (lambda ((arg0 vent))
-          (< (-> *game-info* money) (-> arg0 orb-req)))) ;; blocked until you reach orb threshold
+          (or (> (vector-vector-distance (target-pos 0) (-> arg0 root trans)) (meters 220)) ;; blocked if you too far away
+              (< (-> *game-info* money) (-> arg0 orb-req))))) ;; blocked until you reach orb threshold
   ;; )
   (set! (-> self show-particles) #t)
   (when (logtest? (-> self fact options) (fact-options vent-blocked))

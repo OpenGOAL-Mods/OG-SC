@@ -215,6 +215,13 @@
       ((= msg (debug-menu-msg press)) (set! ,val newval))
       (else ,val))))
 
+(defmacro dm-lambda-float-var-special (val func)
+  "helper macro for making float buttons"
+  `(lambda (arg (msg debug-menu-msg) (newval float))
+    (cond
+      ((= msg (debug-menu-msg press)) (set! ,val newval) (,func))
+      (else ,val))))
+
 (defmacro dm-lambda-meters-var (val)
   "helper macro for making meters buttons"
   `,(lambda (arg (msg debug-menu-msg) (newval float))

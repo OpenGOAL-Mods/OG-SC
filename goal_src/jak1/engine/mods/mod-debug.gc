@@ -45,6 +45,11 @@
     ;; (new-dm-submenu "Modding Tools" modding-tools-menu))
     )
 
+(defun-debug no-hud-money-tally ()
+  (when *hud-parts*
+    (set! (-> *hud-parts* parts 1 0 value) (the int (-> *game-info* money))))
+  (none))
+
 (defun-debug debug-menu-make-modding-tools-menu ((ctx debug-menu-context))
   (let ((mod-misc-menu (new 'debug 'debug-menu ctx "Supercharged")))
     (debug-menu-append-item mod-misc-menu (new-dm-bool "HP Decay" *mod-hp-drain?* dm-boolean-toggle-pick-func))
@@ -52,8 +57,8 @@
     (debug-menu-append-item mod-misc-menu (new-dm-bool "HP/Speed Effect" *mod-hp-speed-effect?* dm-boolean-toggle-pick-func))
     (debug-menu-append-item mod-misc-menu (new-dm-bool "Blue Vent Checkpoints" *mod-vent-checkpoint?* dm-boolean-toggle-pick-func))
     (debug-menu-append-item mod-misc-menu (new-dm-bool "Super-Duper-Charged" *mod-hard-mode?* dm-boolean-toggle-pick-func))
-    (debug-menu-append-item mod-misc-menu (new-dm-var-float "Orbs" (the int #f) (dm-lambda-float-var (-> *game-info* money)) 1.0 0.0 2000.0))
-    (debug-menu-append-item mod-misc-menu (new-dm-var-float "Orbs (faster)" (the int #f) (dm-lambda-float-var (-> *game-info* money)) 10.0 0.0 2000.0))
+    (debug-menu-append-item mod-misc-menu (new-dm-var-float "Orbs" (the int #f) (dm-lambda-float-var-special (-> *game-info* money) no-hud-money-tally) 1.0 0.0 2000.0))
+    (debug-menu-append-item mod-misc-menu (new-dm-var-float "Orbs (faster)" (the int #f) (dm-lambda-float-var-special (-> *game-info* money) no-hud-money-tally) 10.0 0.0 2000.0))
     (debug-menu-append-item mod-misc-menu (new-dm-var-float "Blackout" (the int #f) (dm-lambda-float-var *bg-a*) 0.01 0.0 1.0))
     
     (new-dm-submenu "Supercharged" mod-misc-menu)
