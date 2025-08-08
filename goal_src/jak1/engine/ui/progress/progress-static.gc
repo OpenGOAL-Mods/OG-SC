@@ -76,6 +76,42 @@
             :param3 (game-option-menu settings-title))
        (new 'static 'game-option :option-type (game-option-type button) :name (text-id back) :scale #t)))
 
+(define-extern *mod-hard-mode?* symbol)
+(define *title-sdc*
+  (new 'static
+       'boxed-array
+       :type
+       game-option
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id new-game)
+            :scale #t
+            :param3 (game-option-menu save-game-title)
+            :on-change (lambda () (set! *mod-hard-mode?* #f) (none))
+            :on-confirm (lambda () (set! *mod-hard-mode?* #f) (none)))
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id new-sdc-game)
+            :scale #t
+            :param3 (game-option-menu save-game-title-sdc)
+            :on-change (lambda () (set! *mod-hard-mode?* #t) (none))
+            :on-confirm (lambda () (set! *mod-hard-mode?* #t) (none)))
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id load-game)
+            :scale #t
+            :param3 (game-option-menu load-game))
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id options)
+            :scale #t
+            :param3 (game-option-menu settings-title))
+       (new 'static 'game-option :option-type (game-option-type button) :name (text-id back) :scale #t)))
+       
 (define *options*
   (new 'static
        'boxed-array
@@ -269,7 +305,7 @@
 ;; maps options to a progress screen
 ;; the length matches with `(progress-screen max)`
 (define *options-remap*
-  (new 'static 'boxed-array :type (array game-option) :length 0 :allocated-length (#if (not PC_PORT) 35 71)))
+  (new 'static 'boxed-array :type (array game-option) :length 0 :allocated-length (#if (not PC_PORT) 35 73)))
 
 ;; added in PC port
 (defenum level-task-data-index

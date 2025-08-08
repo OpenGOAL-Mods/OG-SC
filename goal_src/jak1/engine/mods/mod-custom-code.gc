@@ -36,6 +36,7 @@
   (set-eps! entity-name (entity-perm-status dead)))
 
 (define *next-unlock-str* (new 'global 'string 256 (the string #f)))
+(define *next-section-str* (new 'global 'string 256 (the string #f)))
 (define *next-unlock-req* 0.0)
 (define *next-unlock-ptr* (the-as (pointer process) #f))
 
@@ -47,10 +48,207 @@
     )
   )
 
+(deftype outrag-event (structure)
+  ((orb-count int)
+   (filename string)
+   (geyser-play? symbol)
+   (sdc-time int))
+  )
+
+(define *outrag-sdc-unlocked?* #f)
+(define *outrag-event-idx* 0)
+(defconstant *outrag-event-max* 12)
+
+(define *outrag-section-start-time* (the time-frame #f))
+(define *outrag-sdc-times* (the-as (array int)
+  (new 'static 'boxed-array :type uint32 :length *outrag-event-max* :allocated-length *outrag-event-max*
+    (seconds 0) ;; out of max (seconds 0)
+    (seconds 0) ;; out of max (seconds 0)
+    (seconds 0) ;; out of max (seconds 780)
+    (seconds 0) ;; out of max (seconds 960)
+    (seconds 0) ;; out of max (seconds 1260)
+    (seconds 0) ;; out of max (seconds 840)
+    (seconds 0) ;; out of max (seconds 1080)
+    (seconds 0) ;; out of max (seconds 1440)
+    (seconds 0) ;; out of max (seconds 2160)
+    (seconds 0) ;; out of max (seconds 1920)
+    (seconds 0) ;; out of max (seconds 600)
+    (seconds 0) ;; out of max (seconds 0)
+  )))
+
+(define *outrag-events* (the-as (array outrag-event) 
+  (new 'static 'boxed-array :type outrag-event :length *outrag-event-max* :allocated-length *outrag-event-max*
+    (new 'static 'outrag-event
+      :orb-count 0
+      :filename "outrag-0.mp3"
+      :geyser-play? #f
+      :sdc-time (seconds 0)
+      )
+    (new 'static 'outrag-event
+      :orb-count 50
+      :filename "outrag-50.mp3"
+      :geyser-play? #f
+      :sdc-time (seconds 0)
+      )
+    (new 'static 'outrag-event
+      :orb-count 169
+      :filename "outrag-169.mp3"
+      :geyser-play? #t
+      :sdc-time (seconds 780)
+      )
+    (new 'static 'outrag-event
+      :orb-count 342
+      :filename "outrag-342.mp3"
+      :geyser-play? #t
+      :sdc-time (seconds 960)
+      )
+    (new 'static 'outrag-event
+      :orb-count 510
+      :filename "outrag-510.mp3"
+      :geyser-play? #t
+      :sdc-time (seconds 1260)
+      )
+    (new 'static 'outrag-event
+      :orb-count 639
+      :filename "outrag-639.mp3"
+      :geyser-play? #t
+      :sdc-time (seconds 840)
+      )
+    (new 'static 'outrag-event
+      :orb-count 758
+      :filename "outrag-758.mp3"
+      :geyser-play? #t
+      :sdc-time (seconds 1080)
+      )
+    (new 'static 'outrag-event
+      :orb-count 1041
+      :filename "outrag-1041.mp3"
+      :geyser-play? #t
+      :sdc-time (seconds 1440)
+      )
+    (new 'static 'outrag-event
+      :orb-count 1336
+      :filename "outrag-1336.mp3"
+      :geyser-play? #t
+      :sdc-time (seconds 2160)
+      )
+    (new 'static 'outrag-event
+      :orb-count 1580
+      :filename "outrag-1580.mp3"
+      :geyser-play? #t
+      :sdc-time (seconds 1920)
+      )
+    (new 'static 'outrag-event
+      :orb-count 1631
+      :filename "outrag-1631.mp3"
+      :geyser-play? #f
+      :sdc-time (seconds 600)
+      )
+    (new 'static 'outrag-event
+      :orb-count 2000
+      :filename "outrag-2000.mp3"
+      :geyser-play? #f
+      :sdc-time (seconds 0)
+      )
+  )))
+
+(defun jak-touch-ground? ()
+ (and *target*
+      (or (logtest? (-> *target* control status) (cshape-moving-flags onground onsurf on-water))
+          (= (-> *target* next-state name) 'target-hit-ground)))
+  )
+
+(defun draw-section-info ()
+  (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
+    ;; if 2000 orbs collected, unlock super-duper-charged mode
+    (when (and (not *outrag-sdc-unlocked?*) (>= (-> *game-info* money) 2000))
+      (set! *outrag-sdc-unlocked?* #t)
+      (play-sound-file "outrag-sdc.mp3" (the int (-> *setting-control* default dialog-volume)))
+      )
+
+    ;; check if we should advance section idx
+    (let* ((e (-> *outrag-events* *outrag-event-idx*)))
+      (when (and (< *outrag-event-idx* (- *outrag-event-max* 1))
+                 (>= (-> *game-info* money) (-> e orb-count)) ;; player has met orb req
+                 (jak-touch-ground?) ;; player on the ground
+                 (or (not (-> e geyser-play?)) ;; this event plays anywhere
+                     (name= (-> (level-get-target-inside *level*) name) 'training)) ;; player is in geyser
+                 )
+        (format 0 "triggering event ~D with target state ~S~%" *outrag-event-idx* (-> *target* next-state name))
+        ;; SDC - track playtime for this section
+        (when *mod-hard-mode?*
+          (case *outrag-event-idx*
+            ((0)
+              ;; dont record timer for first section
+              (set! *outrag-section-start-time* (current-time)))
+            ((1)
+              ;; dont record timer/reset start time for fake sections
+              )
+            (else
+              ;; record time for this section and reset start time
+              (set! (-> *outrag-sdc-times* *outrag-event-idx*) (- (current-time) *outrag-section-start-time*))
+              (set! *outrag-section-start-time* (current-time)) ;; TODO - reset this on death/continue
+              )
+            )
+          )
+        ;; play josh voiceover
+        (play-sound-file (-> e filename) 
+          (the int (-> *setting-control* default dialog-volume)))
+        ;; advance idx
+        (+! *outrag-event-idx* 1)
+        )
+      )
+
+    ;; draw section info to bottom left
+    (let* ((e (-> *outrag-events* *outrag-event-idx*))
+           (y 215)
+           (section-time (case *outrag-event-idx*
+              ((0 1) (-> *outrag-events* 2 sdc-time))
+              ((11) 
+                ;; sum up remaining times
+                (let ((sum 0))
+                  (dotimes (i (- *outrag-event-max* 2))
+                    (+! sum (-> *outrag-sdc-times* i)))
+                  sum
+                  )
+                )
+              (else (-> e sdc-time))
+              ))
+           (time-remaining (- section-time (- (current-time) *outrag-section-start-time*)))
+           (timer-full-sec (/ time-remaining TICKS_PER_SECOND))
+           (timer-min (/ timer-full-sec 60))
+           (timer-sec (- timer-full-sec (* timer-min 60)))
+           )
+      (clear *next-section-str*)
+      (when *mod-hard-mode?*
+        (if (>= timer-sec 10) ;; too lazy to figure out zero padding for floats
+          (format *next-section-str* "TIME REMAINING: ~D:~D~%" timer-min timer-sec)
+          (format *next-section-str* "TIME REMAINING: ~D:0~D~%" timer-min timer-sec)
+          )
+        (-! y 8)
+        )
+      ;; show return to geyser reminder
+      (when (and (>= (-> *game-info* money) (-> e orb-count))
+                 (-> e geyser-play?))
+        (format *next-section-str* "~3LReturn to Geyser Rock!~1L~%")
+        (-! y 8)
+        )
+      (case *outrag-event-idx*
+        ((0 1)
+          (format *next-section-str* "Section ~D Goal: ~D Orbs" 1 169))
+        (else
+          (format *next-section-str* "Section ~D Goal: ~D Orbs" (- *outrag-event-idx* 1) (-> e orb-count)))
+        )
+      (draw-string-xy *next-section-str* buf 4 y (font-color white) (font-flags shadow kerning))
+      )
+    )
+  (none)
+  )
+
 (defun draw-unlock-info ()
   (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
     ;; play unlock sound effect if we just met the req from last frame
-    (when (and (nonzero? *next-unlock-req*) (= *next-unlock-req* (-> *game-info* money)))
+    (when (and (nonzero? *next-unlock-req*) (<= *next-unlock-req* (-> *game-info* money)))
       (play-sound-file "ee-rr.mp3" (the int (-> *setting-control* default sfx-volume)))
       )
     
@@ -224,8 +422,17 @@
   (when (not *mod-hard-mode?*)
     (kill-entity-if-exists "robotboss-3"))
 
-  ;; draw the info about next unlockable
-  (draw-unlock-info)
+  ;; draw the info about section, next unlockable
+  (case (-> *target* state name) :comp name=
+    (('target-title 'target-title-play 'target-title-wait 'target-continue) ;; nothing
+      )
+    (else
+      (when (not (paused?))
+        (draw-section-info)
+        (draw-unlock-info)
+        )
+      )
+    )
 
   (if *show-input-display* (input-display-on) (input-display-off))
   ;; ensure orb-placer is spawned/killed as requested, debug menu is updated

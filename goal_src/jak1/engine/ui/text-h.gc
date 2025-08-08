@@ -802,6 +802,7 @@
   (pad-square #x2003)
 
   (save-and-load-game #x3000)
+  (new-sdc-game #x3001)
   ;; GAME-TEXT-ID ENUM ENDS
   )
 
