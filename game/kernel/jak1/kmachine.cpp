@@ -552,6 +552,9 @@ void InitMachine_PCPort() {
   // setup string constants
   // TODO - these may be able to be moved into `init_common_pc_port_functions` but it's trickier
   // since they are accessing the Ptr's value
+  auto jak_project_path = file_util::get_jak_project_dir();
+  intern_from_c("*pc-jak-project-path*")->value =
+      make_string_from_c(jak_project_path.string().c_str());
   auto user_dir_path = file_util::get_user_config_dir();
   intern_from_c("*pc-user-dir-base-path*")->value =
       make_string_from_c(user_dir_path.string().c_str());
