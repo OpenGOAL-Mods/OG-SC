@@ -757,7 +757,7 @@
 
 (defun orbs-save-to-file ((filenum int))
   (when (nonzero? (-> *orb-placer-count* *orb-placer-selected-level-idx*)) ;; dont accidentally overwrite w empty file
-    (format (clear *pc-temp-string-1*) "custom_assets/jak1/objects/~S~S.gc" *orba-filename* (-> *orb-placer-lvl-names* filenum))
+    (format (clear *pc-temp-string-1*) "~S/custom_assets/jak1/objects/~S~S.gc" *pc-jak-project-path* *orba-filename* (-> *orb-placer-lvl-names* filenum))
     (pc-mkdir-file-path *pc-temp-string-1*)
     (orbs-write-to-file *pc-temp-string-1*)
     )
@@ -783,7 +783,7 @@
 
 (defun orbs-load ((filenum int))
   (set! *orb-placer-selected-level-idx* filenum)
-  (format (clear *pc-temp-string-1*) "custom_assets/jak1/objects/~S~S.gc" *orba-filename* (-> *orb-placer-lvl-names* filenum))
+  (format (clear *pc-temp-string-1*) "~S/custom_assets/jak1/objects/~S~S.gc" *pc-jak-project-path* *orba-filename* (-> *orb-placer-lvl-names* filenum))
   (cond
     ((pc-filepath-exists? *pc-temp-string-1*)
       (format 0 "[PC] Obj Placer Settings found at '~S'...loading!~%" *pc-temp-string-1*)
