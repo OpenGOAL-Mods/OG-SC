@@ -310,29 +310,30 @@
 (defun orb-placer-list-maintenance ((update-debug-list? symbol))
   (when update-debug-list?
     (debug-menu-remove-all-items *orb-placer-select-menu*))
-  (dotimes (i (-> *orb-placer-count* *orb-placer-selected-level-idx*))
-    (let ((orb-handle (-> *orb-placer-orbs* *orb-placer-selected-level-idx* i))
-          (is-selected? (and *orb-placer-enabled?* (= i *orb-placer-selected-idx*))))
-      (when (and (nonzero? orb-handle) (handle->process orb-handle))
-        (let ((orb-proc (the process-drawable (handle->process orb-handle))))
-          (when (and orb-proc (!= (-> orb-proc next-state name) 'dead-state) (!= (-> orb-proc next-state name) 'hud-collecting))
-            ;; ensure correct highlighting
-            ;; (orb-placer-highlight orb-proc is-selected?)
-            ;; draw z-debug text
-            (add-debug-text-3d #t
-                               (bucket-id debug-no-zbuf)
-                               (-> *orb-placer-temp-strs* i)
-                               (-> orb-proc root trans) ;; (-> orb-proc base)
-                               (if is-selected? 
-                                (if *entity-placer-edit-mode?* (font-color green) (font-color red))
-                                (font-color white))
-                               (new 'static 'vector2h :y 16))
-            (when update-debug-list?
-              ;; append to debug menu list
-              (let ((orb-menu-item (new-dm-flag (-> *orb-placer-temp-strs* i) i dm-orb-placer-select-func)))
-                (debug-menu-append-item *orb-placer-select-menu* orb-menu-item)
-                (when is-selected?
-                  (set! (-> *orb-placer-select-menu* selected-item) orb-menu-item)))))))))
+  (when *orb-placer-enabled?* ;; only show names in edit mode
+    (dotimes (i (-> *orb-placer-count* *orb-placer-selected-level-idx*))
+      (let ((orb-handle (-> *orb-placer-orbs* *orb-placer-selected-level-idx* i))
+            (is-selected? (and *orb-placer-enabled?* (= i *orb-placer-selected-idx*))))
+        (when (and (nonzero? orb-handle) (handle->process orb-handle))
+          (let ((orb-proc (the process-drawable (handle->process orb-handle))))
+            (when (and orb-proc (!= (-> orb-proc next-state name) 'dead-state) (!= (-> orb-proc next-state name) 'hud-collecting))
+              ;; ensure correct highlighting
+              ;; (orb-placer-highlight orb-proc is-selected?)
+              ;; draw z-debug text
+              (add-debug-text-3d #t
+                                (bucket-id debug-no-zbuf)
+                                (-> *orb-placer-temp-strs* i)
+                                (-> orb-proc root trans) ;; (-> orb-proc base)
+                                (if is-selected? 
+                                  (if *entity-placer-edit-mode?* (font-color green) (font-color red))
+                                  (font-color white))
+                                (new 'static 'vector2h :y 16))
+              (when update-debug-list?
+                ;; append to debug menu list
+                (let ((orb-menu-item (new-dm-flag (-> *orb-placer-temp-strs* i) i dm-orb-placer-select-func)))
+                  (debug-menu-append-item *orb-placer-select-menu* orb-menu-item)
+                  (when is-selected?
+                    (set! (-> *orb-placer-select-menu* selected-item) orb-menu-item))))))))))
   (when update-debug-list?
     (set! (-> *orb-placer-select-menu* items) (sort (-> *orb-placer-select-menu* items) debug-menu-node<?)))
   (none))
@@ -755,9 +756,11 @@
 (define *orba-filename* "OBJPLACER-")
 
 (defun orbs-save-to-file ((filenum int))
-  (format (clear *pc-temp-string-1*) "~S/~S~S.gc" *pc-settings-folder* *orba-filename* (-> *orb-placer-lvl-names* filenum))
-  (pc-mkdir-file-path *pc-temp-string-1*)
-  (orbs-write-to-file *pc-temp-string-1*)
+  (when (nonzero? (-> *orb-placer-count* *orb-placer-selected-level-idx*)) ;; dont accidentally overwrite w empty file
+    (format (clear *pc-temp-string-1*) "custom_assets/jak1/objects/~S~S.gc" *orba-filename* (-> *orb-placer-lvl-names* filenum))
+    (pc-mkdir-file-path *pc-temp-string-1*)
+    (orbs-write-to-file *pc-temp-string-1*)
+    )
   (none))
 ;; too lazy to do this better
 (defun orbs-save-to-file-active () (orbs-save-to-file *orb-placer-selected-level-idx*))
@@ -780,7 +783,7 @@
 
 (defun orbs-load ((filenum int))
   (set! *orb-placer-selected-level-idx* filenum)
-  (format (clear *pc-temp-string-1*) "~S/~S~S.gc" *pc-settings-folder* *orba-filename* (-> *orb-placer-lvl-names* filenum))
+  (format (clear *pc-temp-string-1*) "custom_assets/jak1/objects/~S~S.gc" *orba-filename* (-> *orb-placer-lvl-names* filenum))
   (cond
     ((pc-filepath-exists? *pc-temp-string-1*)
       (format 0 "[PC] Obj Placer Settings found at '~S'...loading!~%" *pc-temp-string-1*)

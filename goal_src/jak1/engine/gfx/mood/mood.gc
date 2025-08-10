@@ -1273,7 +1273,7 @@
             (while (>= s1-0 s2-0)
               (let ((f28-0 (-> *palette-fade-controls* control s2-0 fade)))
                 (set! (-> arg0 times s2-0 w) f28-0)
-                (vector-! s3-0 (the-as vector (-> *palette-fade-controls* control s2-0)) (-> *target* control trans))
+                (vector-! s3-0 (the-as vector (-> *palette-fade-controls* control s2-0)) (target-pos 0))
                 (let* ((f3-0 (vector-length s3-0))
                        (f28-1 (* f28-0 (fmax 0.0 (fmin 1.0 (- 1.0 (/ f3-0 (meters 20))))))))
                   (vector-normalize! s3-0 f28-1)
@@ -1417,7 +1417,7 @@
       (let ((v1-28 (new 'static 'vector :x 4605890.5 :z -14253220.0 :w 1.0))
             (a0-8 (new 'stack-no-clear 'vector)))
         0.0
-        (vector-! a0-8 (-> *target* control trans) v1-28)
+        (vector-! a0-8 (target-pos 0) v1-28)
         (set! (-> a0-8 y) 0.0)
         (let ((f0-54 (vector-length a0-8)))
           (set-vector! s3-0 0.19 0.128 0.128 1.0)
