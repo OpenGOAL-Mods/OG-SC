@@ -120,6 +120,10 @@
   (or (= (-> *level* level0 name) lvl) (= (-> *level* level1 name) lvl))
   )
 
+(defun level-idx-loaded? ((idx int))
+  (or (= (-> *level-task-data-remap* (-> *level* level0 index)) idx) (= (-> *level-task-data-remap* (-> *level* level1 index)) idx))
+  )
+
 ;;;;;;;;;;;;;;
 ;; vis
 ;;;;;;;;;;;;;;

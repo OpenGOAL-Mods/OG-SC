@@ -249,7 +249,7 @@
   (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
     ;; play unlock sound effect if we just met the req from last frame
     (when (and (nonzero? *next-unlock-req*) (<= *next-unlock-req* (-> *game-info* money)))
-      (play-sound-file "ee-rr.mp3" (the int (-> *setting-control* default sfx-volume)))
+      (play-sound-file "unlock.mp3" (the int (-> *setting-control* default sfx-volume)))
       )
     
     ;; find next unlockable (process w/ minimum orb-req > our current orbs)
