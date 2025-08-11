@@ -60,21 +60,9 @@
 (defconstant *outrag-event-max* 12)
 
 (define *outrag-section-start-time* (the time-frame #f))
-(define *outrag-sdc-times* (the-as (array int)
-  (new 'static 'boxed-array :type uint32 :length *outrag-event-max* :allocated-length *outrag-event-max*
-    (seconds 0) ;; out of max (seconds 0)
-    (seconds 0) ;; out of max (seconds 0)
-    (seconds 0) ;; out of max (seconds 780)
-    (seconds 0) ;; out of max (seconds 960)
-    (seconds 0) ;; out of max (seconds 1260)
-    (seconds 0) ;; out of max (seconds 840)
-    (seconds 0) ;; out of max (seconds 1080)
-    (seconds 0) ;; out of max (seconds 1440)
-    (seconds 0) ;; out of max (seconds 2160)
-    (seconds 0) ;; out of max (seconds 1920)
-    (seconds 0) ;; out of max (seconds 600)
-    (seconds 0) ;; out of max (seconds 0)
-  )))
+(define *outrag-section-started?* #f)
+(define *outrag-section-finished?* #f)
+(define *outrag-sdc-times* (new 'global 'array 'time-frame *outrag-event-max*))
 
 (define *outrag-events* (the-as (array outrag-event) 
   (new 'static 'boxed-array :type outrag-event :length *outrag-event-max* :allocated-length *outrag-event-max*
@@ -94,7 +82,7 @@
       :orb-count 169
       :filename "outrag-169.mp3"
       :geyser-play? #t
-      :sdc-time (seconds 780)
+      :sdc-time (seconds 20)
       )
     (new 'static 'outrag-event
       :orb-count 342
@@ -158,6 +146,22 @@
           (= (-> *target* next-state name) 'target-hit-ground)))
   )
 
+(defun reset-sc-stuff ()
+  (when (nonzero? *outrag-event-idx*)
+    (format 0 "Resetting SC stuff~%")
+    (set! *next-unlock-req* 0.0)
+    (set! *outrag-event-idx* 0)
+    (set! *outrag-section-start-time* (real-current-time))
+    (set! *outrag-section-started?* #f)
+    (set! *outrag-section-finished?* #f)
+    (dotimes (i *outrag-event-max*)
+      ;; reset all section times to 0 - I guess we don't really need this? idk why its crashing tho
+      ;; (set! (-> *outrag-sdc-times* i) 0)
+      )
+    )
+  (none)
+  )
+
 (defun draw-section-info ()
   (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
     ;; if 2000 orbs collected, unlock super-duper-charged mode
@@ -166,80 +170,142 @@
       (play-sound-file "outrag-sdc.mp3" (the int (-> *setting-control* default dialog-volume)))
       )
 
-    ;; check if we should advance section idx
     (let* ((e (-> *outrag-events* *outrag-event-idx*)))
       (when (and (< *outrag-event-idx* (- *outrag-event-max* 1))
                  (>= (-> *game-info* money) (-> e orb-count)) ;; player has met orb req
-                 (jak-touch-ground?) ;; player on the ground
-                 (or (not (-> e geyser-play?)) ;; this event plays anywhere
-                     (name= (-> (level-get-target-inside *level*) name) 'training)) ;; player is in geyser
                  )
-        (format 0 "triggering event ~D with target state ~S~%" *outrag-event-idx* (-> *target* next-state name))
-        ;; SDC - track playtime for this section
-        (when *mod-hard-mode?*
+        ;; SDC - track playtime for this section if we just met orb goal
+        (when (and *mod-hard-mode?* (not *outrag-section-finished?*))
           (case *outrag-event-idx*
-            ((0)
-              ;; dont record timer for first section
-              (set! *outrag-section-start-time* (current-time)))
-            ((1)
-              ;; dont record timer/reset start time for fake sections
+            ((0 1)
+              ;; dont record timer for fake sections
               )
             (else
-              ;; record time for this section and reset start time
-              (set! (-> *outrag-sdc-times* *outrag-event-idx*) (- (current-time) *outrag-section-start-time*))
-              (set! *outrag-section-start-time* (current-time)) ;; TODO - reset this on death/continue
+              ;; record this section remaining time
+              (format 0 "finishing event ~D ~%" *outrag-event-idx*)
+              (set! *outrag-section-finished?* #t)
+              (set! (-> *outrag-sdc-times* *outrag-event-idx*) (- (real-current-time) *outrag-section-start-time*))
               )
             )
           )
-        ;; play josh voiceover
-        (play-sound-file (-> e filename) 
-          (the int (-> *setting-control* default dialog-volume)))
-        ;; advance idx
-        (+! *outrag-event-idx* 1)
+        ;; check if we should play voiceline and advance to next section
+        (when (and (jak-touch-ground?) ;; player on the ground
+                   (or (not (-> e geyser-play?)) ;; this event plays anywhere
+                       (name= (-> (level-get-target-inside *level*) name) 'training)) ;; player is in geyser
+                   )
+          (format 0 "triggering event ~D with target state ~S~%" *outrag-event-idx* (-> *target* next-state name))
+          ;; SDC - track playtime for this section
+          (when *mod-hard-mode?*
+            (case *outrag-event-idx*
+              ((0)
+                ;; dont record timer for first section
+                (set! *outrag-section-start-time* (real-current-time))
+                (set! *outrag-section-started?* #t)
+                )
+              ((1)
+                ;; dont reset started for fake sections
+                )
+              (else
+                ;; reset this for next section
+                (set! *outrag-section-started?* #f)
+                (set! *outrag-section-finished?* #f)
+                )
+              )
+            )
+          ;; play josh voiceover
+          (play-sound-file (-> e filename) 
+            (the int (-> *setting-control* default dialog-volume)))
+          ;; advance idx
+          (+! *outrag-event-idx* 1)
+          )
         )
       )
 
-    ;; draw section info to bottom left
-    (let* ((e (-> *outrag-events* *outrag-event-idx*))
-           (y 215)
-           (section-time (case *outrag-event-idx*
-              ((0 1) (-> *outrag-events* 2 sdc-time))
-              ((11) 
-                ;; sum up remaining times
-                (let ((sum 0))
-                  (dotimes (i (- *outrag-event-max* 2))
-                    (+! sum (-> *outrag-sdc-times* i)))
-                  sum
+    (let* ((e (-> *outrag-events* *outrag-event-idx*)))
+      ;; check if need to start section
+      (when (and (not *outrag-section-started?*)
+                 (not (name= (-> (level-get-target-inside *level*) name) 'training))) ;; player has left geyser
+        (set! *outrag-section-started?* #t)
+        (set! *outrag-section-start-time* (real-current-time))
+        )
+      
+      (let* ((y 215)
+            (section-time (case *outrag-event-idx*
+                ((0 1) (-> *outrag-events* 2 sdc-time))
+                ((11) 
+                  ;; sum up remaining times
+                  (let ((sum 0))
+                    (dotimes (i (- *outrag-event-max* 2))
+                      (+! sum (- (-> *outrag-events* i sdc-time) (-> *outrag-sdc-times* i))))
+                    sum
+                    )
                   )
+                (else (-> e sdc-time))
+                ))
+            (time-elapsed (if *outrag-section-started?* (- (real-current-time) *outrag-section-start-time*) 0))
+            (time-remaining (- section-time time-elapsed))
+            (timer-full-sec (/ time-remaining TICKS_PER_SECOND))
+            (timer-min (/ timer-full-sec 60))
+            (timer-sec (- timer-full-sec (* timer-min 60)))
+            )
+        ;; draw section info to bottom left
+        (clear *next-section-str*)
+        
+        ;; SDC checks
+        (when *mod-hard-mode?*
+          ;; check if player has failed this section (SDC)
+          (when (and (< time-remaining 0) ;; time is up
+                    *outrag-section-started?* ;; section has started
+                    (< (-> *game-info* money) (-> e orb-count)) ;; player has not met orb req (for case when headed back to geyser)
+                    (not (process-by-name 'sdc-fail-proc *active-pool*))) ;; not already failing player
+            ;; reset game loser
+            (process-spawn-function process
+              :name 'sdc-fail-proc
+              ;This lambda is our function
+              (lambda :behavior process ()
+                ;; play fail sound
+                (play-sound-file "outrag-fail.mp3" 
+                  (the int (-> *setting-control* default dialog-volume)))
+                (let ((t (real-current-time)))
+                  (while (not (time-elapsed? t (seconds 5)))
+                    ;; TODO - show fail text
+                    (suspend)
+                    )
+                  )
+                (reset-sc-stuff)
+                (initialize! *game-info* 'game (the-as game-save #f) "game-start")
+                (set-master-mode 'game)
                 )
-              (else (-> e sdc-time))
-              ))
-           (time-remaining (- section-time (- (current-time) *outrag-section-start-time*)))
-           (timer-full-sec (/ time-remaining TICKS_PER_SECOND))
-           (timer-min (/ timer-full-sec 60))
-           (timer-sec (- timer-full-sec (* timer-min 60)))
-           )
-      (clear *next-section-str*)
-      (when *mod-hard-mode?*
-        (if (>= timer-sec 10) ;; too lazy to figure out zero padding for floats
-          (format *next-section-str* "TIME REMAINING: ~D:~D~%" timer-min timer-sec)
-          (format *next-section-str* "TIME REMAINING: ~D:0~D~%" timer-min timer-sec)
+              )
+            )
+
+          (when (not *outrag-section-finished?*)
+            (if (> time-remaining 0)
+              (if (>= timer-sec 10) ;; too lazy to figure out zero padding for floats
+                (format *next-section-str* "TIME REMAINING: ~D:~D~%" timer-min timer-sec)
+                (format *next-section-str* "TIME REMAINING: ~D:0~D~%" timer-min timer-sec)
+                )
+              (format *next-section-str* "~3LTIME\c12S UP! YOU FAILED~0L~%")
+              )
+            (-! y 8)
+            )
           )
-        (-! y 8)
+        
+        ;; show return to geyser reminder
+        (when (and *outrag-section-finished?*
+                  (>= *outrag-event-idx* 1)
+                  (-> e geyser-play?))
+          (format *next-section-str* "~3LReturn to Geyser Rock!~1L~%")
+          (-! y 8)
+          )
+        (case *outrag-event-idx*
+          ((0 1)
+            (format *next-section-str* "Connection ~D Goal: ~D Orbs" 1 169))
+          (else
+            (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 1) (-> e orb-count)))
+          )
+        (draw-string-xy *next-section-str* buf 4 y (font-color white) (font-flags shadow kerning))
         )
-      ;; show return to geyser reminder
-      (when (and (>= (-> *game-info* money) (-> e orb-count))
-                 (-> e geyser-play?))
-        (format *next-section-str* "~3LReturn to Geyser Rock!~1L~%")
-        (-! y 8)
-        )
-      (case *outrag-event-idx*
-        ((0 1)
-          (format *next-section-str* "Section ~D Goal: ~D Orbs" 1 169))
-        (else
-          (format *next-section-str* "Section ~D Goal: ~D Orbs" (- *outrag-event-idx* 1) (-> e orb-count)))
-        )
-      (draw-string-xy *next-section-str* buf 4 y (font-color white) (font-flags shadow kerning))
       )
     )
   (none)

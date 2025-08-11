@@ -93,6 +93,7 @@
     )
 
 (defun-debug no-hud-money-tally ()
+  (set! (-> *game-info* money-total) (-> *game-info* money))
   (when *hud-parts*
     (set! (-> *hud-parts* parts 1 0 value) (the int (-> *game-info* money))))
   (none))

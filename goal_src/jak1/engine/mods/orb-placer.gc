@@ -760,6 +760,10 @@
     (format (clear *pc-temp-string-1*) "~S/custom_assets/jak1/objects/~S~S.gc" *pc-jak-project-path* *orba-filename* (-> *orb-placer-lvl-names* filenum))
     (pc-mkdir-file-path *pc-temp-string-1*)
     (orbs-write-to-file *pc-temp-string-1*)
+    ;; do it again as backup for josh in settings folder
+    (format (clear *pc-temp-string-1*) "~S/~S~S.gc" *pc-settings-folder* *orba-filename* (-> *orb-placer-lvl-names* filenum))
+    (pc-mkdir-file-path *pc-temp-string-1*)
+    (orbs-write-to-file *pc-temp-string-1*)
     )
   (none))
 ;; too lazy to do this better
