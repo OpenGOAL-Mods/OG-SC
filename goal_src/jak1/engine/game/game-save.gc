@@ -633,9 +633,10 @@
         (((game-save-elt game-time))
          (set! (-> *display* game-frame-counter) (the-as time-frame (-> data user-uint64)))
          (set! (-> *display* old-game-frame-counter) (+ (-> *display* game-frame-counter) -1)))
-        (((game-save-elt real-time))
-         (set! (-> *display* real-frame-counter) (the-as time-frame (-> data user-uint64)))
-         (set! (-> *display* old-real-frame-counter) (+ (-> *display* real-frame-counter) -1)))
+        ;; mod change - dont load this
+        ;; (((game-save-elt real-time))
+        ;;  (set! (-> *display* real-frame-counter) (the-as time-frame (-> data user-uint64)))
+        ;;  (set! (-> *display* old-real-frame-counter) (+ (-> *display* real-frame-counter) -1)))
         (((game-save-elt integral-time))
          (set! (-> *display* integral-frame-counter) (the-as time-frame (-> data user-uint64)))
          (set! (-> *display* old-integral-frame-counter) (+ (-> *display* integral-frame-counter) -1)))

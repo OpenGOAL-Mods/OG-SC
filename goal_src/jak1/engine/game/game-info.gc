@@ -191,7 +191,7 @@
                       ((!= *kernel-boot-message* 'play) "demo-start")
                       (*debug-segment* "village1-hut")
                       (else "title-start")))
-     (define-extern *outrag-event-idx* int) (set! *outrag-event-idx* 0)
+     (when (not save-to-load) (define-extern reset-sc-stuff (function none)) (reset-sc-stuff)) ;; mod change - reset SC state for new game
      (set! (-> this auto-save-count) 0)
      (set! (-> *setting-control* default auto-save) #f)
      (set! (-> this money) 0.0)
@@ -237,8 +237,8 @@
        ;; don't allow pausing/start menu
        (when *target*
          ;; mod change - idk set settings this way so it doesn't break progress screen after death
-         (set-setting! 'allow-pause #f 0.0 0)
-         (set-setting! 'allow-progress #f 0.0 0)
+        ;;  (set-setting! 'allow-pause #f 0.0 0)
+        ;;  (set-setting! 'allow-progress #f 0.0 0)
          ;;  (set-setting *setting-control* *target* 'allow-pause #f 0.0 0)
          ;;  (set-setting *setting-control* *target* 'allow-progress #f 0.0 0)
          (apply-settings *setting-control*))
