@@ -495,6 +495,7 @@
           )
         ;; if it's been 10s since last checkpoint/autosave, do the things
         (when (and *mod-vent-checkpoint?*
+                   (not (logtest? (-> self state-flags) (state-flags dying)))
                    (not (logtest? (-> self control root-prim prim-core action) (collide-action racer tube flut)))
                    (or (not *last-vent-checkpoint-time*)
                        (time-elapsed? *last-vent-checkpoint-time* (seconds 3))))

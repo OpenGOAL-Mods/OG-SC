@@ -272,6 +272,22 @@
                     (s3-7 (if v1-235 (-> v1-235 extra process)) s4-13))))
               (set-continue! *game-info* "lavatube-end")))
            (runs-on-jak-spawn) ;; trigger hook for mod base
+           ;; mod change - autosave when its not initial new game spawn
+           (when (nonzero? (-> *game-info* money))
+            (cond
+              ((< (-> *game-info* auto-save-which) 0)
+                (format 0 "VENTING - NO AUTOSAVE DETECTED, CREATING ONE FOR SLOT 0 NOW~%")
+                ;; make sure its enabled
+                (set! (-> *setting-control* current auto-save) #t)
+                (set! (-> *setting-control* default auto-save) #t)
+                (auto-save-command 'save 0 0 self)
+                )
+              (else
+                ;; (format 0 "VENTING - SAVING IN SLOT ~D NOW~%" (-> *game-info* auto-save-which))
+                (auto-save-command 'save 0 (-> *game-info* auto-save-which) self)
+                )
+              )
+            )
            (go target-warp-in s5-6 (-> arg0 trans))))
         (else (suspend-for (seconds 0.05))))
       (set-continue! *game-info* arg0)
@@ -931,6 +947,7 @@
              0))))
       (set! (-> self control transv quad) (the-as uint128 0))
       ;; mod change - prefer to reload save instead of just respawning
+      (stop-all-sounds) ;; TODO - make this work :(
       (cond
         ((< (-> *game-info* auto-save-which) 0)
           ;; no autosave, lets hope we dont hit this
