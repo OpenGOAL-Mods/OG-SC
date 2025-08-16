@@ -51,8 +51,11 @@
 (deftype outrag-event (structure)
   ((orb-count int)
    (filename string)
+   (filename-sdc string)
    (geyser-play? symbol)
-   (sdc-time int))
+   (sdc-time int)
+   (level-orb-counts int 16) ;; expected total orb counts per level
+   )
   )
 
 (define *outrag-sdc-unlocked?* #f)
@@ -69,80 +72,291 @@
     (new 'static 'outrag-event
       :orb-count 0
       :filename "outrag-0.mp3"
+      :filename-sdc "outrag-0-SDC.mp3"
       :geyser-play? #f
       :sdc-time (seconds 0)
       )
     (new 'static 'outrag-event
       :orb-count 50
       :filename "outrag-50.mp3"
+      :filename-sdc "outrag-50-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 0)
       )
     (new 'static 'outrag-event
       :orb-count 169
       :filename "outrag-169.mp3"
+      :filename-sdc "outrag-169-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 780)
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        0   ;; (village1 1)
+        0   ;; (beach 2)
+        0   ;; (jungle 3)
+        0   ;; (misty 4)
+        0   ;; (firecanyon 5)
+        7   ;; (village2 6)
+        0   ;; (sunken 7)
+        0   ;; (swamp 8)
+        0   ;; (rolling 9)
+        0   ;; (ogre 10)
+        16  ;; (village3 11)
+        8   ;; (snow 12)
+        0   ;; (cave 13)
+        0   ;; (lavatube 14)
+        88  ;; (citadel 15)
+        )
       )
     (new 'static 'outrag-event
       :orb-count 342
       :filename "outrag-342.mp3"
+      :filename-sdc "outrag-342-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 960)
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        21  ;; (village1 1)
+        3   ;; (beach 2)
+        0   ;; (jungle 3)
+        0   ;; (misty 4)
+        0   ;; (firecanyon 5)
+        43  ;; (village2 6)
+        0   ;; (sunken 7)
+        0   ;; (swamp 8)
+        0   ;; (rolling 9)
+        0   ;; (ogre 10)
+        20  ;; (village3 11)
+        66  ;; (snow 12)
+        51  ;; (cave 13)
+        0   ;; (lavatube 14)
+        88  ;; (citadel 15)
+        )
       )
     (new 'static 'outrag-event
       :orb-count 510
       :filename "outrag-510.mp3"
+      :filename-sdc "outrag-510-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 1260)
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        21  ;; (village1 1)
+        3   ;; (beach 2)
+        0   ;; (jungle 3)
+        55  ;; (misty 4)
+        0   ;; (firecanyon 5)
+        47  ;; (village2 6)
+        0   ;; (sunken 7)
+        64  ;; (swamp 8)
+        45  ;; (rolling 9)
+        0   ;; (ogre 10)
+        20  ;; (village3 11)
+        66  ;; (snow 12)
+        51  ;; (cave 13)
+        0   ;; (lavatube 14)
+        88  ;; (citadel 15)
+        )
       )
     (new 'static 'outrag-event
       :orb-count 639
       :filename "outrag-639.mp3"
+      :filename-sdc "outrag-639-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 840)
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        21  ;; (village1 1)
+        42  ;; (beach 2)
+        0   ;; (jungle 3)
+        55  ;; (misty 4)
+        0   ;; (firecanyon 5)
+        50  ;; (village2 6)
+        57  ;; (sunken 7)
+        64  ;; (swamp 8)
+        75  ;; (rolling 9)
+        0   ;; (ogre 10)
+        20  ;; (village3 11)
+        66  ;; (snow 12)
+        51  ;; (cave 13)
+        0   ;; (lavatube 14)
+        88  ;; (citadel 15)
+        )
       )
     (new 'static 'outrag-event
       :orb-count 758
       :filename "outrag-758.mp3"
+      :filename-sdc "outrag-758-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 1080)
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        21  ;; (village1 1)
+        42  ;; (beach 2)
+        0   ;; (jungle 3)
+        91  ;; (misty 4)
+        0   ;; (firecanyon 5)
+        50  ;; (village2 6)
+        57  ;; (sunken 7)
+        64  ;; (swamp 8)
+        75  ;; (rolling 9)
+        0   ;; (ogre 10)
+        20  ;; (village3 11)
+        66  ;; (snow 12)
+        89  ;; (cave 13)
+        0   ;; (lavatube 14)
+        133 ;; (citadel 15)
+        )
       )
     (new 'static 'outrag-event
       :orb-count 1041
       :filename "outrag-1041.mp3"
+      :filename-sdc "outrag-1041-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 1440)
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        21  ;; (village1 1)
+        135 ;; (beach 2)
+        0   ;; (jungle 3)
+        91  ;; (misty 4)
+        0   ;; (firecanyon 5)
+        50  ;; (village2 6)
+        111 ;; (sunken 7)
+        200 ;; (swamp 8)
+        75  ;; (rolling 9)
+        0   ;; (ogre 10)
+        20  ;; (village3 11)
+        66  ;; (snow 12)
+        89  ;; (cave 13)
+        0   ;; (lavatube 14)
+        133 ;; (citadel 15)
+        )
       )
     (new 'static 'outrag-event
       :orb-count 1336
       :filename "outrag-1336.mp3"
+      :filename-sdc "outrag-1336-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 2160)
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        50  ;; (village1 1)
+        135 ;; (beach 2)
+        99  ;; (jungle 3)
+        91  ;; (misty 4)
+        0   ;; (firecanyon 5)
+        50  ;; (village2 6)
+        111 ;; (sunken 7)
+        200 ;; (swamp 8)
+        75  ;; (rolling 9)
+        0   ;; (ogre 10)
+        20  ;; (village3 11)
+        186 ;; (snow 12)
+        89  ;; (cave 13)
+        0   ;; (lavatube 14)
+        180 ;; (citadel 15)
+        )
       )
     (new 'static 'outrag-event
       :orb-count 1580
       :filename "outrag-1580.mp3"
+      :filename-sdc "outrag-1580-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 1920)
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        50  ;; (village1 1)
+        135 ;; (beach 2)
+        99  ;; (jungle 3)
+        91  ;; (misty 4)
+        0   ;; (firecanyon 5)
+        50  ;; (village2 6)
+        164 ;; (sunken 7)
+        200 ;; (swamp 8)
+        136 ;; (rolling 9)
+        0   ;; (ogre 10)
+        50  ;; (village3 11)
+        186 ;; (snow 12)
+        189 ;; (cave 13)
+        0   ;; (lavatube 14)
+        180 ;; (citadel 15)
+        )
       )
     (new 'static 'outrag-event
       :orb-count 1631
       :filename "outrag-1631(1).mp3"
+      ;; :filename-sdc "outrag-1631(1)-SDC.mp3"
       :geyser-play? #f
       :sdc-time (seconds 600)
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        50  ;; (village1 1)
+        135 ;; (beach 2)
+        150 ;; (jungle 3)
+        91  ;; (misty 4)
+        0   ;; (firecanyon 5)
+        50  ;; (village2 6)
+        164 ;; (sunken 7)
+        200 ;; (swamp 8)
+        136 ;; (rolling 9)
+        0   ;; (ogre 10)
+        50  ;; (village3 11)
+        186 ;; (snow 12)
+        189 ;; (cave 13)
+        0   ;; (lavatube 14)
+        180 ;; (citadel 15)
+        )
       )
     (new 'static 'outrag-event
       :orb-count 1631
       :filename "outrag-1631(2).mp3"
+      :filename-sdc "outrag-1631(2)-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 0)
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        50  ;; (village1 1)
+        135 ;; (beach 2)
+        150 ;; (jungle 3)
+        91  ;; (misty 4)
+        0   ;; (firecanyon 5)
+        50  ;; (village2 6)
+        164 ;; (sunken 7)
+        200 ;; (swamp 8)
+        136 ;; (rolling 9)
+        0   ;; (ogre 10)
+        50  ;; (village3 11)
+        186 ;; (snow 12)
+        189 ;; (cave 13)
+        0   ;; (lavatube 14)
+        180 ;; (citadel 15)
+        )
       )
     (new 'static 'outrag-event
       :orb-count 2000
       :filename "outrag-2000.mp3"
+      :filename-sdc "outrag-2000-SDC.mp3"
       :geyser-play? #f
-      :sdc-time (seconds 0)
+      :sdc-time (seconds 0) ;; special case - add up remaining time from other sections
+      :level-orb-counts (new 'static 'array int 16 
+        50  ;; (training 0)
+        50  ;; (village1 1)
+        155 ;; (beach 2)
+        150 ;; (jungle 3)
+        150 ;; (misty 4)
+        50  ;; (firecanyon 5)
+        50  ;; (village2 6)
+        200 ;; (sunken 7)
+        200 ;; (swamp 8)
+        200 ;; (rolling 9)
+        50  ;; (ogre 10)
+        50  ;; (village3 11)
+        200 ;; (snow 12)
+        200 ;; (cave 13)
+        50  ;; (lavatube 14)
+        200 ;; (citadel 15)
+        )
       )
   )))
 
@@ -225,9 +439,13 @@
               ;; (set! *outrag-section-finished?* #f)
               )
             )
-          ;; play josh voiceover
-          (play-sound-file (-> e filename) 
-            (the int (-> *setting-control* default dialog-volume)))
+          ;; maybe play josh voiceover
+          (let ((filename (if *mod-hard-mode?* (-> e filename-sdc) (-> e filename))))
+            (when (and filename (nonzero? filename))
+              (play-sound-file filename
+                (the int (-> *setting-control* default dialog-volume)))
+              )
+            )
           ;; advance idx
           (+! *outrag-event-idx* 1)
           )
@@ -277,7 +495,7 @@
               ;This lambda is our function
               (lambda :behavior process ()
                 ;; play fail sound
-                (play-sound-file "outrag-fail.mp3" 
+                (play-sound-file "outrag-fail-SDC.mp3"
                   (the int (-> *setting-control* default dialog-volume)))
                 (let ((t (real-current-time)))
                   (while (not (time-elapsed? t (seconds 5)))
