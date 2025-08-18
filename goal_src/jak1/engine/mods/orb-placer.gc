@@ -4,7 +4,7 @@
 ;; controls whether the orb-placer process will run
 (define *orb-placer-enabled?* #f)
 ;; controls whether level files are auto-loaded as levels are loaded in/out
-(define *orb-placer-autoload-level?* #f)
+(define *orb-placer-autoload-level?* (not *debug-segment*))
 ;; controls whether placer is actually active vs paused
 (define *entity-placer-edit-mode?* #f)
 

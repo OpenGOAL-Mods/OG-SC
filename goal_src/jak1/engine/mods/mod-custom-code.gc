@@ -36,9 +36,9 @@
   (set-eps! entity-name (entity-perm-status dead)))
 
 (define *next-unlock-str* (new 'global 'string 256 (the string #f)))
+(define *next-unlock-req* -1.0)
 (define *next-section-str* (new 'global 'string 256 (the string #f)))
-(define *next-unlock-req* 0.0)
-(define *next-unlock-ptr* (the-as (pointer process) #f))
+(define *outrag-last-hint-time* (the time-frame #f))
 
 (defun get-orb-req ((proc process-tree))
   (case (-> proc type symbol) :comp name=
@@ -66,6 +66,45 @@
 (define *outrag-section-started?* #f)
 (define *outrag-section-finished?* #f)
 (define *outrag-sdc-times* (new 'global 'array 'time-frame *outrag-event-max*))
+
+(defconstant *unlock-count* 31)
+(define *outrag-unlock-counts* (the-as (array float)
+    (new 'static 'boxed-array :type float :length *unlock-count* :allocated-length *unlock-count*
+      ;; 0 ;; skip dis duh
+      50.0
+      169.0
+      342.0
+      510.0
+      639.0
+      758.0
+      1041.0
+      1336.0
+      1580.0
+      1631.0
+      1980.0
+      1981.0
+      1982.0
+      1983.0
+      1984.0
+      1985.0
+      1986.0
+      1987.0
+      1988.0
+      1989.0
+      1990.0
+      1991.0
+      1992.0
+      1993.0
+      1994.0
+      1995.0
+      1996.0
+      1997.0
+      1998.0
+      1999.0
+      2000.0
+      )
+    )
+  )
 
 (define *outrag-events* (the-as (array outrag-event) 
   (new 'static 'boxed-array :type outrag-event :length *outrag-event-max* :allocated-length *outrag-event-max*
@@ -369,7 +408,7 @@
 (defun reset-sc-stuff ()
   (when (nonzero? *outrag-event-idx*)
     (format 0 "Resetting SC stuff~%")
-    (set! *next-unlock-req* 0.0)
+    (set! *next-unlock-req* -1.0)
     (set! *outrag-event-idx* 0)
     (set! *outrag-section-start-time* (real-current-time))
     (set! *outrag-section-started?* #f)
@@ -444,6 +483,8 @@
             (when (and filename (nonzero? filename))
               (play-sound-file filename
                 (the int (-> *setting-control* default dialog-volume)))
+              ;; dont allow hint for 60s
+              (set! *outrag-last-hint-time* (+ (real-current-time) (seconds 30)))
               )
             )
           ;; advance idx
@@ -547,29 +588,25 @@
 (defun draw-unlock-info ()
   (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
     ;; play unlock sound effect if we just met the req from last frame
-    (when (and (nonzero? *next-unlock-req*) (<= *next-unlock-req* (-> *game-info* money)))
+    (when (and (> *next-unlock-req* 0.0) (<= *next-unlock-req* (-> *game-info* money)))
       (play-sound-file "unlock.mp3" (the int (-> *setting-control* default sfx-volume)))
       )
     
-    ;; find next unlockable (process w/ minimum orb-req > our current orbs)
-    (set! *next-unlock-ptr* (the-as (pointer process) #f))
-    (set! *next-unlock-req* 0.0)
-    (iterate-process-tree *default-pool*
-      (lambda ((this process)) 
-        (let ((req (get-orb-req this)))
-          (when (and (> req (-> *game-info* money))
-                     (or (not *next-unlock-ptr*)
-                         (< req *next-unlock-req*)))
-              (set! *next-unlock-ptr* (process->ppointer this))
-              (set! *next-unlock-req* req)
-            )
+    ;; find next unlock amount
+    (set! *next-unlock-req* -1.0)
+    (dotimes (i *unlock-count*)
+      (let ((req (-> *outrag-unlock-counts* i)))
+        (when (and (> req (-> *game-info* money))
+                   (or (< *next-unlock-req* 0)
+                       (< req *next-unlock-req*)))
+            (set! *next-unlock-req* req)
           )
-        #t)
-      *null-kernel-context*)
+        )
+      )
 
     (cond 
-      (*next-unlock-ptr*
-        (let* ((p (ppointer->process *next-unlock-ptr*)))
+      ((>= *next-unlock-req* 0)
+        ;; (let* ((p (ppointer->process *next-unlock-ptr*)))
           (format (clear *next-unlock-str*) "Next Unlock in ")
           ;; (format *next-unlock-str* (case (-> p type symbol)
           ;;     (('eco-green)   "~6LGreen Eco Cluster~1L~%")
@@ -588,7 +625,7 @@
             (the int (-> *game-info* money))
             (the int *next-unlock-req*)
             )
-          )
+          ;; )
         (draw-string-xy *next-unlock-str* buf 508 215 (font-color white) (font-flags right shadow kerning))
         )
       (else
@@ -600,9 +637,64 @@
     (none)
   )
 
+(defun play-missing-orb-hint ()
+  (cond
+    (*mod-hard-mode?*
+      ;; no hint for u
+      (play-sound-file "outrag-HINT-SDC.mp3" (the int (-> *setting-control* default sfx-volume)))
+      )
+    (else
+      (let ((missing-lvl-idx -1)
+            (e (-> *outrag-events* *outrag-event-idx*)))
+        (dotimes (idx 16)
+          (when (< (-> *game-info* money-per-level idx) (-> e level-orb-counts idx))
+            (if (< missing-lvl-idx 0)
+              (set! missing-lvl-idx idx)  ;; first level missing orbs
+              (set! missing-lvl-idx 1000) ;; more than one level missing orbs
+              )
+            )
+          )
+        (case missing-lvl-idx
+          ((0) (play-sound-file     "outrag-HINT-GR.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((1) (play-sound-file     "outrag-HINT-SV.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((2) (play-sound-file     "outrag-HINT-SB.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((3) (play-sound-file     "outrag-HINT-FJ.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((4) (play-sound-file     "outrag-HINT-MI.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((5) (play-sound-file     "outrag-HINT-FC.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((6) (play-sound-file     "outrag-HINT-RV.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((7) (play-sound-file     "outrag-HINT-LPC.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((8) (play-sound-file     "outrag-HINT-BS.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((9) (play-sound-file     "outrag-HINT-PB.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((10) (play-sound-file    "outrag-HINT-MP.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((11) (play-sound-file    "outrag-HINT-VC.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((12) (play-sound-file    "outrag-HINT-SM.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((13) (play-sound-file    "outrag-HINT-SC.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((14) (play-sound-file    "outrag-HINT-LT.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((15) (play-sound-file    "outrag-HINT-GMC.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((1000) (play-sound-file  "outrag-HINT-2Levels.mp3" (the int (-> *setting-control* default sfx-volume))))
+          )
+        )
+      )
+    )
+
+  (none)
+  )
+
 (defun runs-every-frame ()
   ;; play hints off (why do they keep turning on?)
   (false! (-> *setting-control* default play-hints))
+
+  ;; set mood and time of day
+  (let ((lvl (level-get-target-inside *level*)))
+    ;; twilight time of day in geyser
+    (when (name= (-> lvl name) 'training)
+      (set! (-> *time-of-day-proc* 0 time-ratio) 0.0) (set! (-> *time-of-day-proc* 0 hour) 19)
+      )
+    ;; scary thunder
+    (when *mod-hard-mode?*
+      (set! (-> lvl mood-func) update-mood-village2)
+      )
+    )
 
   ;; close most tasks
   (dotimes (i (game-task max))
@@ -729,6 +821,31 @@
       (when (not (paused?))
         (draw-section-info)
         (draw-unlock-info)
+        )
+      )
+    )
+
+  ;; check if player is near geyser vent and wants a hint
+  (when (and *target* (in-bubble-m? -1311.39   6.77 1056.64  5.0)
+             (>= *outrag-event-idx* 2) ;; only after geyser sections
+             (or (not *outrag-last-hint-time*) ;; no hint yet
+                 (> (- (real-current-time) *outrag-last-hint-time*) (seconds 30))) ;; or 30 seconds have passed
+             )
+    ;; try to show prompt
+    (kill-current-level-hint '() '(sidekick voicebox ambient) 'exit)
+    (level-hint-surpress!)
+    (hide-hud)
+    (when (and (can-grab-display? *target*))
+      (let ((gp-1 (new 'stack 'font-context *font-default-matrix* 32 140 0.0 (font-color default) (font-flags shadow kerning))))
+        (let ((v1-57 gp-1)) (set! (-> v1-57 width) (the float 440)))
+        (let ((v1-58 gp-1)) (set! (-> v1-58 height) (the float 60)))
+        (let ((v1-59 gp-1)) (set! (-> v1-59 scale) 0.9))
+        (set! (-> gp-1 flags) (font-flags shadow kerning middle-vert large))
+        (print-game-text (lookup-text! *common-text* (text-id press-for-hint) #f) gp-1 #f 128 22))
+      ;; hint requested
+      (when (cpad-pressed? 0 circle)
+        (set! *outrag-last-hint-time* (real-current-time))
+        (play-missing-orb-hint)
         )
       )
     )
