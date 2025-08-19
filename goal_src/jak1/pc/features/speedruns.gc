@@ -560,13 +560,13 @@
   )
 
 (defun continue-point-copy! ((dst continue-point) (src continue-point))
-  (set! (-> dst level) (-> src level))
+  ;; mod note - changed for SC since we dont respect current-continue for level/vis
+  (set! (-> dst level) (-> (level-get-target-inside *level*) name))
   (set! (-> dst quat y) 0.0)
   (set! (-> dst quat w) 1.0)
   (set! (-> dst load-commands) (-> src load-commands))
-  (set! (-> dst vis-nick) (-> src vis-nick))
+  (set! (-> dst vis-nick) (-> (level-get-target-inside *level*) nickname))
   (when (-> *level* level0)
-    (set! (-> dst lev0) (-> *level* level0 name))
     (set! (-> dst lev0) (-> *level* level0 name))
     (set! (-> dst disp0) (-> *level* level0 display?))
     )
@@ -722,21 +722,24 @@
     (set! *practice-spawn-post-init* #f)
     )
 
-  (when (and *debug-segment* 
-             (not *progress-process*)
+  (when (and (not *progress-process*)
              (or (cpad-hold? 0 l2) (cpad-pressed? 0 l2)))
     (cond
-      ((cpad-pressed? 0 up) ;; Check for fast reset combo
+      ((and (>= (-> *game-info* auto-save-which) 0) ;; make sure we have autosave slot set
+            (cpad-pressed? 0 up)) ;; Check for fast reset combo
         (format #t "player triggered reset combo~%")
         (false! *full-blue?*)
-        (speedrun-practice-spawn)
+        ;; (speedrun-practice-spawn)
+        (auto-save-command 'restore 0 (-> *game-info* auto-save-which) *target*)
         )
-      ((cpad-pressed? 0 right) ;; Check for fast reset full eco/HP combo
+      ((and *debug-segment* ;; can only reset with full eco in debug mode
+            (cpad-pressed? 0 right)) ;; Check for fast reset full eco/HP combo
         (format #t "player triggered reset combo full eco/HP~%")
         (true! *full-blue?*)
         (speedrun-practice-spawn)
         )
-      ((cpad-pressed? 0 down) ;; Check for temp checkpoint combo
+      ((and *debug-segment* ;; can only set custom ones in debug mode
+            (cpad-pressed? 0 down)) ;; Check for temp checkpoint combo
         (format #t "player triggered temp checkpoint combo~%")
         (speedrun-practice-store-temp-checkpoint)
         )
