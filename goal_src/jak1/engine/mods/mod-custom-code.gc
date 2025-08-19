@@ -828,13 +828,11 @@
   ;; check if player is near geyser vent and wants a hint
   (when (and *target* (in-bubble-m? -1311.39   6.77 1056.64  5.0)
              (>= *outrag-event-idx* 2) ;; only after geyser sections
-             (or (not *outrag-last-hint-time*) ;; no hint yet
-                 (> (- (real-current-time) *outrag-last-hint-time*) (seconds 30))) ;; or 30 seconds have passed
+             (not (is-sound-playing "")) ;; wait for any sounds to finish
              )
     ;; try to show prompt
     (kill-current-level-hint '() '(sidekick voicebox ambient) 'exit)
     (level-hint-surpress!)
-    (hide-hud)
     (when (and (can-grab-display? *target*))
       (let ((gp-1 (new 'stack 'font-context *font-default-matrix* 32 140 0.0 (font-color default) (font-flags shadow kerning))))
         (let ((v1-57 gp-1)) (set! (-> v1-57 width) (the float 440)))
