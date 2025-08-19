@@ -38,7 +38,6 @@
 (define *next-unlock-str* (new 'global 'string 256 (the string #f)))
 (define *next-unlock-req* -1.0)
 (define *next-section-str* (new 'global 'string 256 (the string #f)))
-(define *outrag-last-hint-time* (the time-frame #f))
 
 (defun get-orb-req ((proc process-tree))
   (case (-> proc type symbol) :comp name=
@@ -128,7 +127,7 @@
       :filename-sdc "outrag-169-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 780)
-      :level-orb-counts (new 'static 'array int 16 
+      :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         0   ;; (village1 1)
         0   ;; (beach 2)
@@ -153,7 +152,7 @@
       :filename-sdc "outrag-342-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 960)
-      :level-orb-counts (new 'static 'array int 16 
+      :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         21  ;; (village1 1)
         3   ;; (beach 2)
@@ -178,7 +177,7 @@
       :filename-sdc "outrag-510-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 1260)
-      :level-orb-counts (new 'static 'array int 16 
+      :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         21  ;; (village1 1)
         3   ;; (beach 2)
@@ -481,10 +480,9 @@
           ;; maybe play josh voiceover
           (let ((filename (if *mod-hard-mode?* (-> e filename-sdc) (-> e filename))))
             (when (and filename (nonzero? filename))
+              (stop-all-sounds)
               (play-sound-file filename
                 (the int (-> *setting-control* default dialog-volume)))
-              ;; dont allow hint for 60s
-              (set! *outrag-last-hint-time* (+ (real-current-time) (seconds 30)))
               )
             )
           ;; advance idx
@@ -536,6 +534,7 @@
               ;This lambda is our function
               (lambda :behavior process ()
                 ;; play fail sound
+                (stop-all-sounds)
                 (play-sound-file "outrag-fail-SDC.mp3"
                   (the int (-> *setting-control* default dialog-volume)))
                 (let ((t (real-current-time)))
@@ -587,20 +586,26 @@
 
 (defun draw-unlock-info ()
   (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
-    ;; play unlock sound effect if we just met the req from last frame
-    (when (and (> *next-unlock-req* 0.0) (<= *next-unlock-req* (-> *game-info* money)))
+    ;; play unlock sound effect if we just met the req from last frame, and we're not fresh outta blackout (loading save)
+    (when (and (> *next-unlock-req* 0.0) (<= *next-unlock-req* (-> *game-info* money))
+               (> (current-time) (+ (-> *game-info* blackout-time) (seconds 3))))
       (play-sound-file "unlock.mp3" (the int (-> *setting-control* default sfx-volume)))
       )
     
     ;; find next unlock amount
-    (set! *next-unlock-req* -1.0)
-    (dotimes (i *unlock-count*)
-      (let ((req (-> *outrag-unlock-counts* i)))
-        (when (and (> req (-> *game-info* money))
-                   (or (< *next-unlock-req* 0)
-                       (< req *next-unlock-req*)))
-            (set! *next-unlock-req* req)
+    (let ((tmp-unlock-req -1.0))
+      (dotimes (i *unlock-count*)
+        (let ((req (-> *outrag-unlock-counts* i)))
+          (when (and (> req (-> *game-info* money))
+                    (or (< tmp-unlock-req 0)
+                        (< req tmp-unlock-req)))
+              (set! tmp-unlock-req req)
+            )
           )
+        )
+      ;; only increase, to prevent
+      (when (> tmp-unlock-req *next-unlock-req*)
+        (set! *next-unlock-req* tmp-unlock-req)
         )
       )
 
@@ -641,7 +646,7 @@
   (cond
     (*mod-hard-mode?*
       ;; no hint for u
-      (play-sound-file "outrag-HINT-SDC.mp3" (the int (-> *setting-control* default sfx-volume)))
+      (play-sound-file "outrag-HINT-SDC.mp3" (the int (-> *setting-control* default dialog-volume)))
       )
     (else
       (let ((missing-lvl-idx -1)
@@ -655,23 +660,23 @@
             )
           )
         (case missing-lvl-idx
-          ((0) (play-sound-file     "outrag-HINT-GR.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((1) (play-sound-file     "outrag-HINT-SV.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((2) (play-sound-file     "outrag-HINT-SB.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((3) (play-sound-file     "outrag-HINT-FJ.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((4) (play-sound-file     "outrag-HINT-MI.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((5) (play-sound-file     "outrag-HINT-FC.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((6) (play-sound-file     "outrag-HINT-RV.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((7) (play-sound-file     "outrag-HINT-LPC.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((8) (play-sound-file     "outrag-HINT-BS.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((9) (play-sound-file     "outrag-HINT-PB.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((10) (play-sound-file    "outrag-HINT-MP.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((11) (play-sound-file    "outrag-HINT-VC.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((12) (play-sound-file    "outrag-HINT-SM.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((13) (play-sound-file    "outrag-HINT-SC.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((14) (play-sound-file    "outrag-HINT-LT.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((15) (play-sound-file    "outrag-HINT-GMC.mp3" (the int (-> *setting-control* default sfx-volume))))
-          ((1000) (play-sound-file  "outrag-HINT-2Levels.mp3" (the int (-> *setting-control* default sfx-volume))))
+          ((0) (play-sound-file     "outrag-HINT-GR.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((1) (play-sound-file     "outrag-HINT-SV.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((2) (play-sound-file     "outrag-HINT-SB.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((3) (play-sound-file     "outrag-HINT-FJ.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((4) (play-sound-file     "outrag-HINT-MI.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((5) (play-sound-file     "outrag-HINT-FC.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((6) (play-sound-file     "outrag-HINT-RV.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((7) (play-sound-file     "outrag-HINT-LPC.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((8) (play-sound-file     "outrag-HINT-BS.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((9) (play-sound-file     "outrag-HINT-PB.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((10) (play-sound-file    "outrag-HINT-MP.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((11) (play-sound-file    "outrag-HINT-VC.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((12) (play-sound-file    "outrag-HINT-SM.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((13) (play-sound-file    "outrag-HINT-SC.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((14) (play-sound-file    "outrag-HINT-LT.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((15) (play-sound-file    "outrag-HINT-GMC.mp3" (the int (-> *setting-control* default dialog-volume))))
+          ((1000) (play-sound-file  "outrag-HINT-2Levels.mp3" (the int (-> *setting-control* default dialog-volume))))
           )
         )
       )
@@ -826,25 +831,22 @@
     )
 
   ;; check if player is near geyser vent and wants a hint
-  (when (and *target* (in-bubble-m? -1311.39   6.77 1056.64  5.0)
+  (when (and *target* (or (in-bubble-m? -1311.39   6.77 1056.64  5.0) (in-bubble-m? -1418.61   3.81 1010.54  5.0))
              (>= *outrag-event-idx* 2) ;; only after geyser sections
              (not (is-sound-playing "")) ;; wait for any sounds to finish
              )
     ;; try to show prompt
     (kill-current-level-hint '() '(sidekick voicebox ambient) 'exit)
     (level-hint-surpress!)
-    (when (and (can-grab-display? *target*))
-      (let ((gp-1 (new 'stack 'font-context *font-default-matrix* 32 140 0.0 (font-color default) (font-flags shadow kerning))))
-        (let ((v1-57 gp-1)) (set! (-> v1-57 width) (the float 440)))
-        (let ((v1-58 gp-1)) (set! (-> v1-58 height) (the float 60)))
-        (let ((v1-59 gp-1)) (set! (-> v1-59 scale) 0.9))
-        (set! (-> gp-1 flags) (font-flags shadow kerning middle-vert large))
-        (print-game-text (lookup-text! *common-text* (text-id press-for-hint) #f) gp-1 #f 128 22))
-      ;; hint requested
-      (when (cpad-pressed? 0 circle)
-        (set! *outrag-last-hint-time* (real-current-time))
-        (play-missing-orb-hint)
-        )
+    (let ((gp-1 (new 'stack 'font-context *font-default-matrix* 32 140 0.0 (font-color default) (font-flags shadow kerning))))
+      (let ((v1-57 gp-1)) (set! (-> v1-57 width) (the float 440)))
+      (let ((v1-58 gp-1)) (set! (-> v1-58 height) (the float 60)))
+      (let ((v1-59 gp-1)) (set! (-> v1-59 scale) 0.9))
+      (set! (-> gp-1 flags) (font-flags shadow kerning middle-vert large))
+      (print-game-text (lookup-text! *common-text* (text-id press-for-hint) #f) gp-1 #f 128 22))
+    ;; hint requested
+    (when (cpad-pressed? 0 circle)
+      (play-missing-orb-hint)
       )
     )
 
