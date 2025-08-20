@@ -541,7 +541,7 @@
   (when (-> *tmp-continue-point* level)
     (set! *practice-spawn-post-init* custom-reset-multi-post-init)
     ;; fully reset game if r2 held too
-    (if (cpad-hold? 0 r2)
+    (if (and *debug-segment* (cpad-hold? 0 r2))
       (initialize! *game-info* 'game (the-as game-save #f) "default")
       )
     ;; store last real checkpoint to restore later
@@ -601,18 +601,18 @@
 
   ;; flag init
   (set! (-> *tmp-continue-point* flags) (continue-flags speedrun))
-  (set! *full-hp?* (and (!= *target* #f)
-                (= (-> *target* fact health) 3.0)
-                (= (-> *target* fact eco-pill) 50.0)
-                ))
-  (case (-> *target* state)
-    ((target-flut-stance)
-      (logior! (-> *tmp-continue-point* flags) (continue-flags flut))
-      )
-    ((target-racing)
-      (logior! (-> *tmp-continue-point* flags) (continue-flags racer))
-      )
-    )
+  ;; (set! *full-hp?* (and (!= *target* #f)
+  ;;               (= (-> *target* fact health) 3.0)
+  ;;               (= (-> *target* fact eco-pill) 50.0)
+  ;;               ))
+  ;; (case (-> *target* state)
+  ;;   ((target-flut-stance)
+  ;;     (logior! (-> *tmp-continue-point* flags) (continue-flags flut))
+  ;;     )
+  ;;   ((target-racing)
+  ;;     (logior! (-> *tmp-continue-point* flags) (continue-flags racer))
+  ;;     )
+  ;;   )
   (none)
   )
 
@@ -727,7 +727,7 @@
     (cond
       ((and (>= (-> *game-info* auto-save-which) 0) ;; make sure we have autosave slot set
             (cpad-pressed? 0 up)) ;; Check for fast reset combo
-        (format #t "player triggered reset combo~%")
+        (format #t "player triggered reset combo ~D~%" (-> *game-info* auto-save-which))
         (false! *full-blue?*)
         ;; (speedrun-practice-spawn)
         (auto-save-command 'restore 0 (-> *game-info* auto-save-which) *target*)

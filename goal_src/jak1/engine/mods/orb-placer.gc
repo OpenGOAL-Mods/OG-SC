@@ -1,5 +1,5 @@
 (in-package goal)
-(declare-file (debug))
+;; (declare-file (debug))
 
 ;; controls whether the orb-placer process will run
 (define *orb-placer-enabled?* #f)
@@ -281,22 +281,24 @@
        ))
 
 ;; global for this so we can repopulate it as needed
-(define *orb-placer-select-menu* (the-as debug-menu #f))
+(when *debug-segment*
+  (define *orb-placer-select-menu* (the-as debug-menu #f))
 
-(defun dm-orb-placer-select-func ((idx int) (msg debug-menu-msg))
-  (when (= msg (debug-menu-msg press))
-    (cond
-      ((= *orb-placer-selected-idx* idx)
-       ;; deselect
-       (set! *orb-placer-selected-idx* -1)
-       (set! *orb-placer-enabled?* #f)
-       (false! *entity-placer-edit-mode?*))
-      (else
-       ;; select
-       (set! *orb-placer-selected-idx* idx)
-       (set! *orb-placer-enabled?* #t)
-       (true! *entity-placer-edit-mode?*))))
-  (= *orb-placer-selected-idx* idx))
+  (defun dm-orb-placer-select-func ((idx int) (msg debug-menu-msg))
+    (when (= msg (debug-menu-msg press))
+      (cond
+        ((= *orb-placer-selected-idx* idx)
+        ;; deselect
+        (set! *orb-placer-selected-idx* -1)
+        (set! *orb-placer-enabled?* #f)
+        (false! *entity-placer-edit-mode?*))
+        (else
+        ;; select
+        (set! *orb-placer-selected-idx* idx)
+        (set! *orb-placer-enabled?* #t)
+        (true! *entity-placer-edit-mode?*))))
+    (= *orb-placer-selected-idx* idx))
+  )
 
 (defun orb-placer-highlight ((orb process-drawable) (highlight? symbol))
   (return 0)
@@ -308,34 +310,36 @@
   (none))
 
 (defun orb-placer-list-maintenance ((update-debug-list? symbol))
-  (when update-debug-list?
-    (debug-menu-remove-all-items *orb-placer-select-menu*))
-  (when *orb-placer-enabled?* ;; only show names in edit mode
-    (dotimes (i (-> *orb-placer-count* *orb-placer-selected-level-idx*))
-      (let ((orb-handle (-> *orb-placer-orbs* *orb-placer-selected-level-idx* i))
-            (is-selected? (and *orb-placer-enabled?* (= i *orb-placer-selected-idx*))))
-        (when (and (nonzero? orb-handle) (handle->process orb-handle))
-          (let ((orb-proc (the process-drawable (handle->process orb-handle))))
-            (when (and orb-proc (!= (-> orb-proc next-state name) 'dead-state) (!= (-> orb-proc next-state name) 'hud-collecting))
-              ;; ensure correct highlighting
-              ;; (orb-placer-highlight orb-proc is-selected?)
-              ;; draw z-debug text
-              (add-debug-text-3d #t
-                                (bucket-id debug-no-zbuf)
-                                (-> *orb-placer-temp-strs* i)
-                                (-> orb-proc root trans) ;; (-> orb-proc base)
-                                (if is-selected? 
-                                  (if *entity-placer-edit-mode?* (font-color green) (font-color red))
-                                  (font-color white))
-                                (new 'static 'vector2h :y 16))
-              (when update-debug-list?
-                ;; append to debug menu list
-                (let ((orb-menu-item (new-dm-flag (-> *orb-placer-temp-strs* i) i dm-orb-placer-select-func)))
-                  (debug-menu-append-item *orb-placer-select-menu* orb-menu-item)
-                  (when is-selected?
-                    (set! (-> *orb-placer-select-menu* selected-item) orb-menu-item))))))))))
-  (when update-debug-list?
-    (set! (-> *orb-placer-select-menu* items) (sort (-> *orb-placer-select-menu* items) debug-menu-node<?)))
+  (when *debug-segment*
+    (when update-debug-list?
+      (debug-menu-remove-all-items *orb-placer-select-menu*))
+    (when *orb-placer-enabled?* ;; only show names in edit mode
+      (dotimes (i (-> *orb-placer-count* *orb-placer-selected-level-idx*))
+        (let ((orb-handle (-> *orb-placer-orbs* *orb-placer-selected-level-idx* i))
+              (is-selected? (and *orb-placer-enabled?* (= i *orb-placer-selected-idx*))))
+          (when (and (nonzero? orb-handle) (handle->process orb-handle))
+            (let ((orb-proc (the process-drawable (handle->process orb-handle))))
+              (when (and orb-proc (!= (-> orb-proc next-state name) 'dead-state) (!= (-> orb-proc next-state name) 'hud-collecting))
+                ;; ensure correct highlighting
+                ;; (orb-placer-highlight orb-proc is-selected?)
+                ;; draw z-debug text
+                (add-debug-text-3d #t
+                                  (bucket-id debug-no-zbuf)
+                                  (-> *orb-placer-temp-strs* i)
+                                  (-> orb-proc root trans) ;; (-> orb-proc base)
+                                  (if is-selected? 
+                                    (if *entity-placer-edit-mode?* (font-color green) (font-color red))
+                                    (font-color white))
+                                  (new 'static 'vector2h :y 16))
+                (when update-debug-list?
+                  ;; append to debug menu list
+                  (let ((orb-menu-item (new-dm-flag (-> *orb-placer-temp-strs* i) i dm-orb-placer-select-func)))
+                    (debug-menu-append-item *orb-placer-select-menu* orb-menu-item)
+                    (when is-selected?
+                      (set! (-> *orb-placer-select-menu* selected-item) orb-menu-item))))))))))
+    (when update-debug-list?
+      (set! (-> *orb-placer-select-menu* items) (sort (-> *orb-placer-select-menu* items) debug-menu-node<?)))
+    )
   (none))
 
 (defun orb-placer-add ()

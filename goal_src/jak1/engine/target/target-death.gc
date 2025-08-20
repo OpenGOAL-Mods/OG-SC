@@ -947,7 +947,6 @@
              0))))
       (set! (-> self control transv quad) (the-as uint128 0))
       ;; mod change - prefer to reload save instead of just respawning
-      (stop-all-sounds) ;; TODO - make this work :(
       (cond
         ((< (-> *game-info* auto-save-which) 0)
           ;; no autosave, lets hope we dont hit this
