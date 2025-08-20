@@ -1078,6 +1078,7 @@
   (on #t)
   (load-dbg "Display started: ~A~%" *dproc*)
   (when init-game
+    (format 0 "init-game ~A~%" *debug-continue-point*)
     ;; og:mod-base use custom continue point
     (initialize! *game-info*
                  'game

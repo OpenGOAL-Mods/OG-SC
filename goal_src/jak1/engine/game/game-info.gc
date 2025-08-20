@@ -89,8 +89,11 @@
        (set! (-> gp-0 disp1) (-> *load-state* want 1 display?))
        gp-0))))
 
+(define-extern *tmp-continue-point* continue-point)
 (defmethod get-continue-by-name ((this game-info) (arg0 string))
   "Look up a continue point by string name"
+  (when (name= arg0 "tmp")
+    (return *tmp-continue-point*))
   (let ((s5-0 *level-load-list*))
     ;; loop over levels
     (while (not (null? s5-0))
@@ -124,7 +127,7 @@
        (let ((v1-5 (get-continue-by-name this (the-as string arg0)))) 
         (when v1-5
           ;; mod change - only allow certain continue pts
-          (when (logtest? (-> v1-5 flags) (continue-flags warp intro title))
+          (when (logtest? (-> v1-5 flags) (continue-flags warp intro title speedrun))
             (set! (-> this current-continue) v1-5)))))
       ((continue-point) 
         ;; mod change - only allow certain continue pts
@@ -189,8 +192,8 @@
                     (cond
                       (continue-point-override (empty) continue-point-override)
                       ((!= *kernel-boot-message* 'play) "demo-start")
-                      (*debug-segment* "village1-hut")
-                      (else "title-start")))
+                      (*debug-segment* (format 0 "VILLAGE1_HUT 000~%") "village1-hut")
+                      (else (format 0 "TITLE_START 000~%") "title-start")))
      (when (not save-to-load) (define-extern reset-sc-stuff (function none)) (reset-sc-stuff)) ;; mod change - reset SC state for new game
      (set! (-> this auto-save-count) 0)
      (set! (-> *setting-control* default auto-save) #f)

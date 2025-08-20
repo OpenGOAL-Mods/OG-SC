@@ -42,15 +42,15 @@
               (-> this force-on-screen)
               (or (and (cpad-hold? 0 l2) (not (-> this disable))) (and (not *cheat-mode*) (cpad-hold? 0 r2)) (-> this first-init)))
       ;; modified for mod - toggle between with dpad left
-      (cond
-        ((cpad-pressed? 0 left) 
-          (+! *hud-collectable-view* 1)
-          (when (> *hud-collectable-view* (hud-collectable-view level-totals))
-            (set! *hud-collectable-view* (hud-collectable-view original)))
-          )
-        ;; ((cpad-hold? 0 down) (set! *hud-collectable-view* (hud-collectable-view level-totals)))
-        ;; ((or (cpad-hold? 0 left) (cpad-hold? 0 right)) (set! *hud-collectable-view* (hud-collectable-view original)))
-        )
+      ;; (cond
+      ;;   ((cpad-pressed? 0 left)
+      ;;     (+! *hud-collectable-view* 1)
+      ;;     (when (> *hud-collectable-view* (hud-collectable-view level-totals))
+      ;;       (set! *hud-collectable-view* (hud-collectable-view original)))
+      ;;     )
+      ;;   ;; ((cpad-hold? 0 down) (set! *hud-collectable-view* (hud-collectable-view level-totals)))
+      ;;   ;; ((or (cpad-hold? 0 left) (cpad-hold? 0 right)) (set! *hud-collectable-view* (hud-collectable-view original)))
+      ;;   )
       (cond
         ((and (-> this increment-on-event)
               (< (-> this value) arg0)
