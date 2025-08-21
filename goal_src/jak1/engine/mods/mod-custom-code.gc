@@ -485,7 +485,11 @@
         (set! *outrag-section-started?* #t)
         (set! *outrag-section-start-time* (real-current-time))
         )
-      
+      ;; "pause" timer if we're in geyser or blackout
+      (when (or (name= (-> (level-get-target-inside *level*) name) 'training)
+                (>= (-> *game-info* blackout-time) (current-time)))
+        (+! *outrag-section-start-time* (/ TICKS_PER_SECOND 60))
+        )
       (let* ((y 215)
             (section-time (case *outrag-event-idx*
                 ((0 1) (-> *outrag-events* 2 sdc-time))
@@ -775,6 +779,10 @@
   ;; misty
   (let ((bc (entity-by-name "misty-battlecontroller-1")))
     (when bc (set! (-> bc extra perm user-int8 0) 1)))
+  (complete-entity-if-exists "silostep-7")
+  (complete-entity-if-exists "silostep-8")
+  (complete-entity-if-exists "silostep-9")
+  (complete-entity-if-exists "silostep-10")
   ;; rolling
   (complete-entity-if-exists "lightning-mole-2")
   (complete-entity-if-exists "lightning-mole-3")
