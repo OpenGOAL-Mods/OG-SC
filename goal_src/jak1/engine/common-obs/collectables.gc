@@ -1780,10 +1780,10 @@
   ;; mod change - vanilla blue eco vents in hub1 always blocked
   (case (-> this fact pickup-type)
     (((pickup-type eco-blue))
-    (case (-> arg0 extra level name)
-      (('training 'village1 'beach 'jungle 'jungleb 'misty 'firecanyon)
-        (logior! (-> this fact options) (fact-options vent-blocked vent-valve))
-        (set! (-> this block-func) (lambda ((arg0 vent)) #t))))
+      (case (-> arg0 extra level name)
+        (('training 'village1 'beach 'jungle 'jungleb 'misty 'firecanyon)
+          (logior! (-> this fact options) (fact-options vent-blocked vent-valve))
+          (set! (-> this block-func) (lambda ((arg0 vent)) #t))))
       )
     )
   (when (logtest? (-> this fact options) (fact-options vent-blocked))
@@ -1842,7 +1842,7 @@
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
       (case message
-        (('show) (go vent-wait-for-touch))))
+        (('show) (set! (-> self block-func) (the-as (function vent symbol) false-func)) (go vent-wait-for-touch))))
   :code
     (behavior ()
       (loop
