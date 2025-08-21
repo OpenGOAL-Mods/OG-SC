@@ -360,7 +360,7 @@
       )
     (new 'static 'outrag-event
       :orb-count 2000
-      :filename "outrag-2000.mp3"
+      ;; :filename "outrag-2000.mp3" ;; special case
       :filename-sdc "outrag-2000-SDC.mp3"
       :geyser-play? #f
       :sdc-time (seconds 0) ;; special case - add up remaining time from other sections
@@ -409,14 +409,8 @@
 
 (defun draw-section-info ()
   (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
-    ;; if 2000 orbs collected, unlock super-duper-charged mode
-    (when (and (not *outrag-sdc-unlocked?*) (>= (-> *game-info* money) 2000))
-      (set! *outrag-sdc-unlocked?* #t)
-      (play-sound-file "outrag-sdc.mp3" (the int (-> *setting-control* default dialog-volume)))
-      )
-
     (let* ((e (-> *outrag-events* *outrag-event-idx*)))
-      (when (and (< *outrag-event-idx* (- *outrag-event-max* 1))
+      (when (and (< *outrag-event-idx* *outrag-event-max*)
                  (>= (-> *game-info* money) (-> e orb-count)) ;; player has met orb req
                  )
         
@@ -472,6 +466,24 @@
                 (the int (-> *setting-control* default dialog-volume)))
               )
             )
+          ;; special case for 2000 SC -> unlock super-duper-charged mode
+          (when (and (= *outrag-event-idx* (- *outrag-event-max* 1)) (not *mod-hard-mode?*) (not *outrag-sdc-unlocked?*) (>= (-> *game-info* money) 2000))
+            (set! *outrag-sdc-unlocked?* #t)
+            (stop-all-sounds)
+            (play-sound-file "outrag-2000.mp3" (the int (-> *setting-control* default dialog-volume)))
+            (process-spawn-function process
+              :name 'sdc-fail-proc
+              ;This lambda is our function
+              (lambda :behavior process ()
+                ;; suspend until outrag-2000 ends
+                (while (is-sound-playing "outrag-2000.mp3")
+                  (suspend))
+                ;; reset to title screen
+                (initialize! *game-info* 'game (the-as game-save #f) "title-start")
+                (set-master-mode 'game)
+                )
+              )
+            )
           ;; advance idx
           (+! *outrag-event-idx* 1)
           )
@@ -490,85 +502,87 @@
                 (>= (-> *game-info* blackout-time) (current-time)))
         (+! *outrag-section-start-time* (/ TICKS_PER_SECOND 60))
         )
-      (let* ((y 215)
-            (section-time (case *outrag-event-idx*
-                ((0 1) (-> *outrag-events* 2 sdc-time))
-                (((- *outrag-event-max* 1)) 
-                  ;; sum up remaining times
-                  (let ((sum 0))
-                    (dotimes (i (- *outrag-event-max* 2))
-                      (+! sum (- (-> *outrag-events* i sdc-time) (-> *outrag-sdc-times* i))))
-                    sum
+      (when (< *outrag-event-idx* *outrag-event-max*)
+        (let* ((y 215)
+              (section-time (case *outrag-event-idx*
+                  ((0 1) (-> *outrag-events* 2 sdc-time))
+                  (((- *outrag-event-max* 1)) 
+                    ;; sum up remaining times
+                    (let ((sum 0))
+                      (dotimes (i (- *outrag-event-max* 2))
+                        (+! sum (- (-> *outrag-events* i sdc-time) (-> *outrag-sdc-times* i))))
+                      sum
+                      )
                     )
-                  )
-                (else (-> e sdc-time))
-                ))
-            (time-elapsed (if *outrag-section-started?* (- (real-current-time) *outrag-section-start-time*) 0))
-            (time-remaining (- section-time time-elapsed))
-            (timer-full-sec (/ time-remaining TICKS_PER_SECOND))
-            (timer-min (/ timer-full-sec 60))
-            (timer-sec (- timer-full-sec (* timer-min 60)))
-            )
-        ;; draw section info to bottom left
-        (clear *next-section-str*)
-        
-        ;; SDC checks
-        (when *mod-hard-mode?*
-          ;; check if player has failed this section (SDC)
-          (when (and (< time-remaining 0) ;; time is up
-                    *outrag-section-started?* ;; section has started
-                    (< (-> *game-info* money) (-> e orb-count)) ;; player has not met orb req (for case when headed back to geyser)
-                    (not (process-by-name 'sdc-fail-proc *active-pool*))) ;; not already failing player
-            ;; reset game loser
-            (process-spawn-function process
-              :name 'sdc-fail-proc
-              ;This lambda is our function
-              (lambda :behavior process ()
-                ;; play fail sound
-                (stop-all-sounds)
-                (play-sound-file "outrag-fail-SDC.mp3"
-                  (the int (-> *setting-control* default dialog-volume)))
-                (let ((t (real-current-time)))
-                  (while (not (time-elapsed? t (seconds 5)))
-                    ;; TODO - show fail text
-                    (suspend)
+                  (else (-> e sdc-time))
+                  ))
+              (time-elapsed (if *outrag-section-started?* (- (real-current-time) *outrag-section-start-time*) 0))
+              (time-remaining (- section-time time-elapsed))
+              (timer-full-sec (/ time-remaining TICKS_PER_SECOND))
+              (timer-min (/ timer-full-sec 60))
+              (timer-sec (- timer-full-sec (* timer-min 60)))
+              )
+          ;; draw section info to bottom left
+          (clear *next-section-str*)
+          
+          ;; SDC checks
+          (when *mod-hard-mode?*
+            ;; check if player has failed this section (SDC)
+            (when (and (< time-remaining 0) ;; time is up
+                      *outrag-section-started?* ;; section has started
+                      (< (-> *game-info* money) (-> e orb-count)) ;; player has not met orb req (for case when headed back to geyser)
+                      (not (process-by-name 'sdc-fail-proc *active-pool*))) ;; not already failing player
+              ;; reset game loser
+              (process-spawn-function process
+                :name 'sdc-fail-proc
+                ;This lambda is our function
+                (lambda :behavior process ()
+                  ;; play fail sound
+                  (stop-all-sounds)
+                  (play-sound-file "outrag-fail-SDC.mp3"
+                    (the int (-> *setting-control* default dialog-volume)))
+                  (let ((t (real-current-time)))
+                    (while (not (time-elapsed? t (seconds 5)))
+                      ;; TODO - show fail text
+                      (suspend)
+                      )
                     )
+                  (reset-sc-stuff)
+                  (initialize! *game-info* 'game (the-as game-save #f) "game-start")
+                  (set-master-mode 'game)
                   )
-                (reset-sc-stuff)
-                (initialize! *game-info* 'game (the-as game-save #f) "game-start")
-                (set-master-mode 'game)
                 )
               )
-            )
 
-          ;; (when (not *outrag-section-finished?*)
-            (if (> time-remaining 0)
-              (if (>= timer-sec 10) ;; too lazy to figure out zero padding for floats
-                (format *next-section-str* "TIME REMAINING: ~D:~D~%" timer-min timer-sec)
-                (format *next-section-str* "TIME REMAINING: ~D:0~D~%" timer-min timer-sec)
+            ;; (when (not *outrag-section-finished?*)
+              (if (> time-remaining 0)
+                (if (>= timer-sec 10) ;; too lazy to figure out zero padding for floats
+                  (format *next-section-str* "TIME REMAINING: ~D:~D~%" timer-min timer-sec)
+                  (format *next-section-str* "TIME REMAINING: ~D:0~D~%" timer-min timer-sec)
+                  )
+                (format *next-section-str* "~3LTIME\c12S UP! YOU FAILED~0L~%")
                 )
-              (format *next-section-str* "~3LTIME\c12S UP! YOU FAILED~0L~%")
-              )
+              (-! y 8)
+              ;; )
+            )
+          
+          ;; show return to geyser reminder
+          (when (and (>= (-> *game-info* money) (-> e orb-count)) ;; player has met orb req
+                    (> *outrag-event-idx* 1)
+                    (-> e geyser-play?))
+            (format *next-section-str* "~3LReturn to Geyser Rock!~1L~%")
             (-! y 8)
-            ;; )
+            )
+          (case *outrag-event-idx*
+            ((0 1)
+              (format *next-section-str* "Connection ~D Goal: ~D Orbs" 1 169))
+            ((11 12)
+              (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 2) (-> e orb-count)))
+            (else
+              (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 1) (-> e orb-count)))
+            )
+          (draw-string-xy *next-section-str* buf 4 y (font-color white) (font-flags shadow kerning))
           )
-        
-        ;; show return to geyser reminder
-        (when (and (>= (-> *game-info* money) (-> e orb-count)) ;; player has met orb req
-                  (> *outrag-event-idx* 1)
-                  (-> e geyser-play?))
-          (format *next-section-str* "~3LReturn to Geyser Rock!~1L~%")
-          (-! y 8)
-          )
-        (case *outrag-event-idx*
-          ((0 1)
-            (format *next-section-str* "Connection ~D Goal: ~D Orbs" 1 169))
-          ((11 12)
-            (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 2) (-> e orb-count)))
-          (else
-            (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 1) (-> e orb-count)))
-          )
-        (draw-string-xy *next-section-str* buf 4 y (font-color white) (font-flags shadow kerning))
         )
       )
     )
