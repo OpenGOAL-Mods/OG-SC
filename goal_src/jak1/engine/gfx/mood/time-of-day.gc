@@ -369,8 +369,7 @@
              (set! (-> arg0 sun-fade) (+ f0-20 (* f30-0 (- (-> *level* level1 info sun-fade) f0-20)))))))
         ;; mod hack - more stars in hard mode
         (when (and *mod-hard-mode?* *mod-stars?*)
-          (set! (-> arg0 num-stars) (fmax 1.0 (-> arg0 num-stars))) ;; at least 1 star as base
-          (*! (-> arg0 num-stars) 500))
+          (set! (-> arg0 num-stars) 500.0))
         ;; setup sky stuff
         (dotimes (s4-5 2)
           (make-sky-textures arg0 s4-5))
