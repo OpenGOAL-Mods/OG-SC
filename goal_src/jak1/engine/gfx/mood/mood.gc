@@ -748,7 +748,7 @@
   (clear-mood-times arg0)
   (update-mood-palette arg0 arg1 arg2)
   (when *time-of-day-effects*
-    (update-mood-flames arg0 4 4 0 0.333 0.001953125 1.0)
+    ;; (update-mood-flames arg0 4 4 0 0.333 0.001953125 1.0)
     (update-mood-lightning arg0 2 2 4 2 0.5 #f))
   (let ((a0-7 (-> arg0 light-group 1))) (update-light-kit a0-7 (-> arg0 light-group 0 ambi) 0.9))
   (let ((s5-1 (-> arg0 light-group 2)))

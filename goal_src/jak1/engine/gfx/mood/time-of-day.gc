@@ -4,6 +4,10 @@
 (require "engine/gfx/sprite/sparticle/sparticle.gc")
 (require "engine/gfx/mood/mood.gc")
 
+(define-extern *mod-hard-mode?* symbol)
+(define-extern *mod-fog?* symbol)
+(define-extern *mod-stars?* symbol)
+
 ;; DECOMP BEGINS
 
 (defmethod asize-of ((this time-of-day-palette))
@@ -363,6 +367,10 @@
                  (+ (-> arg0 moods 0 num-stars) (* (- (-> arg0 moods 1 num-stars) (-> arg0 moods 0 num-stars)) f30-0)))
            (let ((f0-20 (-> *level* level0 info sun-fade)))
              (set! (-> arg0 sun-fade) (+ f0-20 (* f30-0 (- (-> *level* level1 info sun-fade) f0-20)))))))
+        ;; mod hack - more stars in hard mode
+        (when (and *mod-hard-mode?* *mod-stars?*)
+          (set! (-> arg0 num-stars) (fmax 1.0 (-> arg0 num-stars))) ;; at least 1 star as base
+          (*! (-> arg0 num-stars) 500))
         ;; setup sky stuff
         (dotimes (s4-5 2)
           (make-sky-textures arg0 s4-5))
@@ -397,6 +405,11 @@
           (new 'static 'rgba :a #x80 :b (the int (-> v1-184 z)) :g (the int (-> v1-184 y)) :r (the int (-> v1-184 x)))))
   (set! (-> *math-camera* fog-start) (-> arg0 current-fog fog-dists x))
   (set! (-> *math-camera* fog-end) (-> arg0 current-fog fog-dists y))
+  ;; mod hack - increase fog in hard mode
+  (when (and *mod-hard-mode?* *mod-fog?*)
+    (*! (-> *math-camera* fog-end) 0.07)
+    (set! (-> *math-camera* fog-end) (max (-> *math-camera* fog-end) 1200000.0))
+    )
   (set! (-> *math-camera* fog-max) (-> arg0 current-fog fog-dists z))
   (set! (-> *math-camera* fog-min) (-> arg0 current-fog fog-dists w))
   ;; interp target lights. (note: added check here.)

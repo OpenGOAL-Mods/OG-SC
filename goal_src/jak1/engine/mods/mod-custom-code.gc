@@ -689,15 +689,22 @@
     (when (name= (-> lvl name) 'training)
       (set! (-> *time-of-day-proc* 0 time-ratio) 0.0) (set! (-> *time-of-day-proc* 0 hour) 19)
       )
-    ;; scary thunder
-    (when *mod-hard-mode?*
-      (case (-> lvl name) :comp name=
-        (('maincave 'robocave 'darkcave 'lavatube 'citadel) 
-          ;; normal mood, no thunder
-          )
-        (else
-          (set! (-> lvl mood-func) update-mood-sdc)
-          )
+    ;; set/reset mood
+    (cond
+      ((and *mod-hard-mode?* *mod-lightning?*
+            (case (-> lvl name) :comp name=
+              (('maincave 'robocave 'darkcave 'lavatube 'citadel) #f) ;; no lightning effect
+              (else #t)
+              )
+            )
+        ;; lightning
+        ;; (set! (-> lvl mood) *sdc-mood*)
+        (set! (-> lvl mood-func) update-mood-sdc)
+        )
+      (else
+        ;; restore original mood from level-load-info
+        (set! (-> lvl mood) (the mood-context (-> lvl info mood value)))
+        (set! (-> lvl mood-func) (the (function mood-context float int none) (-> lvl info mood-func value)))
         )
       )
     )
