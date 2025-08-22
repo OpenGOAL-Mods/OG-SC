@@ -273,17 +273,17 @@
               (set-continue! *game-info* "lavatube-end")))
            (runs-on-jak-spawn) ;; trigger hook for mod base
            ;; mod change - autosave when its not initial new game spawn
-           (when (nonzero? (-> *game-info* money))
+           (when (or (not *debug-segment*) (nonzero? (-> *game-info* money)))
             (cond
               ((< (-> *game-info* auto-save-which) 0)
-                (format 0 "VENTING - NO AUTOSAVE DETECTED, CREATING ONE FOR SLOT 0 NOW~%")
+                (format 0 "WARP-CONTINUE - NO AUTOSAVE DETECTED, CREATING ONE FOR SLOT 0 NOW~%")
                 ;; make sure its enabled
                 (set! (-> *setting-control* current auto-save) #t)
                 (set! (-> *setting-control* default auto-save) #t)
                 (auto-save-command 'save 0 0 self)
                 )
               (else
-                ;; (format 0 "VENTING - SAVING IN SLOT ~D NOW~%" (-> *game-info* auto-save-which))
+                (format 0 "WARP-CONTINUE - SAVING IN SLOT ~D NOW~%" (-> *game-info* auto-save-which))
                 (auto-save-command 'save 0 (-> *game-info* auto-save-which) self)
                 )
               )
