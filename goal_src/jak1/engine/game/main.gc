@@ -238,30 +238,47 @@
 (define *progress-cheat* #f)
 
 (define *first-boot* #t) ;; PAL
-
+(define-extern sc-reset (function symbol none))
+(define-extern *outrag-sdc-unlocked?* symbol)
 (defun main-cheats ()
   "Handle cheat codes and timeout"
   ;; look for codes when L3 is pushed
   (when (and (cpad-hold? 0 l3)
              (or *cheat-mode* (= *kernel-boot-message* 'play)) ;; not in demo
              )
+    ;; mod change - prevent original codes from working
     ;; cheat mode
     (check-cheat-code (-> *cheat-temp* 0)
                       0
                       (up up down down left right left right x x square circle square circle)
                       (cpad-clear! 0 r1)
-                      ;; toggle!
-                      (not! *cheat-mode*)
-                      (cheats-sound-play *cheat-mode*))
+                      ;; mod change for cheaters
+                      (sc-reset #t)
+                      ;; ;; toggle!
+                      ;; (not! *cheat-mode*)
+                      ;; (cheats-sound-play *cheat-mode*)
+                      )
     ;; debug mode
     (when *cheat-mode*
       (check-cheat-code (-> *cheat-temp* 1)
                         0
                         (circle square circle square x x right left right left down down up up)
                         (cpad-clear! 0 r1)
-                        ;; toggle between #t and debug.
-                        (set! *cheat-mode* (if (= *cheat-mode* 'debug) #t 'debug))
-                        (cheats-sound-play *cheat-mode*)))
+                        ;; mod change for cheaters
+                        (sc-reset #t)
+                        ;; ;; toggle between #t and debug.
+                        ;; (set! *cheat-mode* (if (= *cheat-mode* 'debug) #t 'debug))
+                        ;; (cheats-sound-play *cheat-mode*)
+                        ))
+    ;; mod change - unlock super-duper-charged mode
+    (check-cheat-code (-> *cheat-temp* 5)
+                      0
+                      (up left down right up x square triangle circle x)
+                      (cpad-clear! 0 r1)
+                      ;; toggle!
+                      (not! *outrag-sdc-unlocked?*)
+                      (cheats-sound-play *outrag-sdc-unlocked?*)
+                      )
     ;; language cheat, REMOVED IN PC PORT because it's literally useless
     #|
     (case (scf-get-territory)

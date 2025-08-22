@@ -98,7 +98,7 @@
       :orb-count 0
       :filename "outrag-0.mp3"
       :filename-sdc "outrag-0-SDC.mp3"
-      :geyser-play? #f
+      :geyser-play? #t
       :sdc-time (seconds 0)
       )
     (new 'static 'outrag-event
@@ -407,6 +407,36 @@
   (none)
   )
 
+(defun sc-reset ((cheated? symbol))
+  (when (not (process-by-name 'cheat-proc *active-pool*)) ;; not already handling this
+    ;; reset game loser
+    (process-spawn-function process
+      :name 'cheat-proc
+      ;This lambda is our function
+      (lambda :behavior process ((cheated? symbol))
+        (when cheated?
+          (let ((s (if *mod-hard-mode?* "outrag-CHEAT-SDC.mp3" "outrag-CHEAT.mp3")))
+            (stop-all-sounds)
+            (play-sound-file s
+              (the int (-> *setting-control* default dialog-volume)))
+            (suspend-for (seconds 0.1))
+            ;; suspend until sound ends
+            (while (is-sound-playing s)
+              (suspend))
+            )
+          )
+        (reset-sc-stuff)
+        (initialize! *game-info* 'game (the-as game-save #f) "game-start")
+        (set-master-mode 'game)
+        (suspend-for (seconds 0.1))
+        (set-blackout-frames 0)
+        )
+      cheated?
+      )
+    )
+  (none)
+  )
+
 (defun draw-section-info ()
   (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
     (let* ((e (-> *outrag-events* *outrag-event-idx*)))
@@ -461,20 +491,32 @@
           ;; maybe play josh voiceover
           (let ((filename (if *mod-hard-mode?* (-> e filename-sdc) (-> e filename))))
             (when (and filename (nonzero? filename))
-              (stop-all-sounds)
-              (play-sound-file filename
-                (the int (-> *setting-control* default dialog-volume)))
+              (process-spawn-function process
+                ;; :name 'voice-proc
+                ;This lambda is our function
+                (lambda :behavior process ((filename string))
+                  (suspend-for (seconds 1.0)) ;; pause for a bit
+                  (stop-all-sounds)
+                  (play-sound-file filename (the int (-> *setting-control* default dialog-volume)))
+                  )
+                filename
+                )
               )
             )
-          ;; special case for 2000 SC -> unlock super-duper-charged mode
-          (when (and (= *outrag-event-idx* (- *outrag-event-max* 1)) (not *mod-hard-mode?*) (not *outrag-sdc-unlocked?*) (>= (-> *game-info* money) 2000))
+          ;; special case for 2000 SC -> unlock super-duper-charged mode (we already did geyser check earlier ^^^^)
+          (when (and (= *outrag-event-idx* (- *outrag-event-max* 1)) 
+                     (not *mod-hard-mode?*) 
+                     (not *outrag-sdc-unlocked?*) 
+                     (>= (-> *game-info* money) 2000)
+                     (not (process-by-name 'sc-finish-proc *active-pool*))) ;; not already running this, just to be safe
             (set! *outrag-sdc-unlocked?* #t)
-            (stop-all-sounds)
-            (play-sound-file "outrag-2000.mp3" (the int (-> *setting-control* default dialog-volume)))
             (process-spawn-function process
-              :name 'sdc-fail-proc
+              :name 'sc-finish-proc
               ;This lambda is our function
               (lambda :behavior process ()
+                (stop-all-sounds)
+                (play-sound-file "outrag-2000.mp3" (the int (-> *setting-control* default dialog-volume)))
+                (suspend-for (seconds 0.1))
                 ;; suspend until outrag-2000 ends
                 (while (is-sound-playing "outrag-2000.mp3")
                   (suspend))
@@ -541,12 +583,10 @@
                   (stop-all-sounds)
                   (play-sound-file "outrag-fail-SDC.mp3"
                     (the int (-> *setting-control* default dialog-volume)))
-                  (let ((t (real-current-time)))
-                    (while (not (time-elapsed? t (seconds 5)))
-                      ;; TODO - show fail text
-                      (suspend)
-                      )
-                    )
+                  (suspend-for (seconds 0.1))
+                  ;; suspend until outrag-fail-SDC ends
+                  (while (is-sound-playing "outrag-fail-SDC.mp3")
+                    (suspend))
                   (reset-sc-stuff)
                   (initialize! *game-info* 'game (the-as game-save #f) "game-start")
                   (set-master-mode 'game)
@@ -711,7 +751,7 @@
     (cond
       ((and *mod-hard-mode?* *mod-lightning?*
             (case (-> lvl name) :comp name=
-              (('maincave 'robocave 'darkcave 'lavatube 'citadel) #f) ;; no lightning effect
+              (('maincave 'robocave 'darkcave 'lavatube 'citadel 'finalboss) #f) ;; no lightning effect
               (else #t)
               )
             )
@@ -739,10 +779,10 @@
         )
       (((game-task finalboss-movies))
         ;; close unless we're in superdupercharged mode
-        (when (and (not *mod-hard-mode?*)
-                   (not (task-closed? (the-as game-task i) (task-status need-reward-speech))))
-          (close-specific-task! (the-as game-task i) (task-status need-reward-speech))
-          )
+        ;; (when (and (not *mod-hard-mode?*)
+        ;;            (not (task-closed? (the-as game-task i) (task-status need-reward-speech))))
+        ;;   (close-specific-task! (the-as game-task i) (task-status need-reward-speech))
+        ;;   )
         )
       (((game-task plunger-lurker-hit))
         (when (not (task-closed? (the-as game-task i) (task-status need-hint)))
@@ -768,6 +808,24 @@
       )
     )
 
+  ;; keep level names from popping up
+  (mark-text-as-seen *game-info* (text-id training-level-name))
+  (mark-text-as-seen *game-info* (text-id village1-level-name))
+  (mark-text-as-seen *game-info* (text-id beach-level-name))
+  (mark-text-as-seen *game-info* (text-id jungle-level-name))
+  (mark-text-as-seen *game-info* (text-id misty-level-name))
+  (mark-text-as-seen *game-info* (text-id firecanyon-level-name))
+  (mark-text-as-seen *game-info* (text-id village2-level-name))
+  (mark-text-as-seen *game-info* (text-id sunken-level-name))
+  (mark-text-as-seen *game-info* (text-id swamp-level-name))
+  (mark-text-as-seen *game-info* (text-id rolling-level-name))
+  (mark-text-as-seen *game-info* (text-id ogre-level-name))
+  (mark-text-as-seen *game-info* (text-id village3-level-name))
+  (mark-text-as-seen *game-info* (text-id snow-level-name))
+  (mark-text-as-seen *game-info* (text-id cave-level-name))
+  (mark-text-as-seen *game-info* (text-id lavatube-level-name))
+  (mark-text-as-seen *game-info* (text-id citadel-level-name))
+
   ;; kill some entities that don't respect their task status
   ;; sandover
   (complete-entity-if-exists "yakow-8")
@@ -791,8 +849,9 @@
   ;; jungleb
   (complete-entity-if-exists "plant-boss-3")
   ;; misty
-  (let ((bc (entity-by-name "misty-battlecontroller-1")))
-    (when bc (set! (-> bc extra perm user-int8 0) 1)))
+  (kill-entity-if-exists "misty-battlecontroller-1")
+  ;; (let ((bc (entity-by-name "misty-battlecontroller-1")))
+  ;;   (when bc (set! (-> bc extra perm user-int8 0) 1)))
   (complete-entity-if-exists "silostep-7")
   (complete-entity-if-exists "silostep-8")
   (complete-entity-if-exists "silostep-9")

@@ -158,7 +158,7 @@ eco-door-event-handler
       (loop
         (when (and *target* (>= (-> self open-distance) (vector-vector-distance (-> self root trans) (-> *target* control trans))))
           (eco-door-method-26 self)
-          (if (and (not (-> self locked))
+          (if (and (or (not (-> self locked)) (= (-> self type symbol) 'rounddoor)) ;; mod hack to not let misty doors lock
                    (or (and (-> self entity) (logtest? (-> self entity extra perm status) (entity-perm-status complete)))
                        (send-event *target* 'query 'powerup (pickup-type eco-blue))
                        (and (-> self one-way) (< (vector4-dot (-> self out-dir) (target-pos 0)) -8192.0))))

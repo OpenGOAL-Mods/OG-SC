@@ -422,6 +422,7 @@
     (+! (-> self credit-fade) -0.008333334))
   (none))
 
+(define-extern sc-reset (function symbol none))
 (defstate play-anim (sage-finalboss)
   :virtual #t
   :event
@@ -567,13 +568,22 @@
       (set! (-> *palette-fade-controls* control 2 fade) (-> self palette-val))
       (case (current-status (-> self tasks))
         (((task-status need-introduction)) (spool-push *art-control* "green-sagecage-outro-beat-boss-a" 0 self -1.0))
-        (((task-status need-reminder-a)) (spool-push *art-control* "green-sagecage-outro-beat-boss-b" 0 self -1.0))
-        (((task-status need-reminder))
-         (if (target-has-all-the-cells?)
-           (spool-push *art-control* "green-sagecage-outro-beat-boss-enough-cells" 0 self -1.0)
-           (spool-push *art-control* "green-sagecage-outro-beat-boss-need-cells" 0 self -1.0)))
-        (((task-status need-reward-speech)) (spool-push *art-control* "green-sagecage-outro-big-finish" 0 self -1.0)))
-      ((-> (method-of-type process-taskable play-anim) trans))))
+        ;; (((task-status need-reminder-a)) (spool-push *art-control* "green-sagecage-outro-beat-boss-b" 0 self -1.0))
+        ;; (((task-status need-reminder))
+        ;;  (if (target-has-all-the-cells?)
+        ;;    (spool-push *art-control* "green-sagecage-outro-beat-boss-enough-cells" 0 self -1.0)
+        ;;    (spool-push *art-control* "green-sagecage-outro-beat-boss-need-cells" 0 self -1.0)))
+        ;; (((task-status need-reward-speech)) (spool-push *art-control* "green-sagecage-outro-big-finish" 0 self -1.0))
+        )
+      (case (current-status (-> self tasks))
+        (((task-status need-reminder) (task-status need-reward-speech))
+          ;; mod change - reset SDC game here
+          (sc-reset #f)
+          (deactivate self))
+        (else ((-> (method-of-type process-taskable play-anim) trans)))
+        )
+      )
+    )
 
 (defstate sage-finalboss-credits (sage-finalboss)
   :exit
