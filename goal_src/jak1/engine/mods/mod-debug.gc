@@ -104,6 +104,7 @@
     (debug-menu-append-item mod-misc-menu (new-dm-bool "HP Regen" *mod-hp-regen?* dm-boolean-toggle-pick-func))
     (debug-menu-append-item mod-misc-menu (new-dm-bool "HP/Speed Effect" *mod-hp-speed-effect?* dm-boolean-toggle-pick-func))
     (debug-menu-append-item mod-misc-menu (new-dm-bool "Blue Vent Checkpoints" *mod-vent-checkpoint?* dm-boolean-toggle-pick-func))
+    (debug-menu-append-item mod-misc-menu (new-dm-bool "SDC Unlocked?" *outrag-sdc-unlocked?* dm-boolean-toggle-pick-func))
     (debug-menu-append-item mod-misc-menu (new-dm-bool "Super-Duper-Charged" *mod-hard-mode?* dm-boolean-toggle-pick-func))
     (debug-menu-append-item mod-misc-menu (new-dm-bool "SDC Fog" *mod-fog?* dm-boolean-toggle-pick-func))
     (debug-menu-append-item mod-misc-menu (new-dm-bool "SDC Stars" *mod-stars?* dm-boolean-toggle-pick-func))

@@ -353,7 +353,8 @@
   (none))
 
 (defun update-task-hints ()
-  (when *target*
+  ;; mod change - we're hacking in-level-time to track time used per section for SDC, so dont use it here
+  (when #f ;; *target*
     (let ((a0-0 (+ (-> *target* current-level info index) -1))
           (v1-7 (-> *game-info* task-hint-control)))
       (when (and (>= a0-0 0) (< a0-0 (-> *level-task-data-remap* length)))

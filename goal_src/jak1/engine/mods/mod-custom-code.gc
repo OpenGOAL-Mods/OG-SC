@@ -59,12 +59,12 @@
 
 (define *outrag-sdc-unlocked?* #f)
 (define *outrag-event-idx* 0)
-(defconstant *outrag-event-max* 13)
+;; (defconstant *outrag-event-max* 13) ;; moved to game-save.gc
 
-(define *outrag-section-start-time* (the time-frame #f))
+(define *outrag-section-remaining-time* (the time-frame (seconds 780)))
 (define *outrag-section-started?* #f)
 (define *outrag-section-finished?* #f)
-(define *outrag-sdc-times* (new 'global 'array 'time-frame *outrag-event-max*))
+;; (define *outrag-sdc-times* (new 'global 'array 'time-frame *outrag-event-max*)) ;; moved to game-save.gc
 
 (defconstant *unlock-count* 18)
 (define *outrag-unlock-counts* (the-as (array float)
@@ -313,7 +313,7 @@
       :filename "outrag-1631(1).mp3"
       ;; :filename-sdc "outrag-1631(1)-SDC.mp3"
       :geyser-play? #f
-      :sdc-time (seconds 600)
+      :sdc-time (seconds 0)
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         50  ;; (village1 1)
@@ -338,7 +338,7 @@
       :filename "outrag-1631(2).mp3"
       :filename-sdc "outrag-1631(2)-SDC.mp3"
       :geyser-play? #t
-      :sdc-time (seconds 0)
+      :sdc-time (seconds 600)
       :level-orb-counts (new 'static 'array int 16 
         50  ;; (training 0)
         50  ;; (village1 1)
@@ -393,10 +393,10 @@
 
 (defun reset-sc-stuff ()
   (when (nonzero? *outrag-event-idx*)
-    (format 0 "Resetting SC stuff~%")
+    (format 0 "YO Resetting SC stuff~%")
     (set! *next-unlock-req* -1.0)
     (set! *outrag-event-idx* 0)
-    (set! *outrag-section-start-time* (real-current-time))
+    (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
     (set! *outrag-section-started?* #f)
     (set! *outrag-section-finished?* #f)
     (dotimes (i *outrag-event-max*)
@@ -437,10 +437,27 @@
   (none)
   )
 
+(defun player-is-playing? ()
+  (if (not *target*) (return #f))
+  (case (-> *target* state name) :comp name=
+    (('target-title 'target-title-play 'target-title-wait) ;; nothing, plus lets stop any sounds just to be safe
+      (stop-all-sounds)
+      #f
+      )
+    (('target-continue) ;; nothing
+      #f
+      )
+    (else
+      (and (not (paused?)) (not (movie?)))
+      )
+    )
+  )
+
 (defun draw-section-info ()
   (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
     (let* ((e (-> *outrag-events* *outrag-event-idx*)))
-      (when (and (< *outrag-event-idx* *outrag-event-max*)
+      (when (and (player-is-playing?)
+                 (< *outrag-event-idx* *outrag-event-max*)
                  (>= (-> *game-info* money) (-> e orb-count)) ;; player has met orb req
                  )
         
@@ -465,9 +482,9 @@
                 )
               (else
                 ;; record this section remaining time
-                (format 0 "finishing event ~D ~%" *outrag-event-idx*)
+                (format 0 "finishing event ~D, recording time ~D ~%" *outrag-event-idx* (/ *outrag-section-remaining-time* TICKS_PER_SECOND))
                 ;; (set! *outrag-section-finished?* #t)
-                (set! (-> *outrag-sdc-times* *outrag-event-idx*) (- (real-current-time) *outrag-section-start-time*))
+                (set! (-> *outrag-sdc-times* *outrag-event-idx*) *outrag-section-remaining-time*)
                 )
               )
             ;; )
@@ -476,7 +493,9 @@
           (cond
             ((zero? *outrag-event-idx*)
               ;; treat this as start of first section
-              (set! *outrag-section-start-time* (real-current-time))
+              ;; (format 0 "YO zero idx set~%")
+              (format 0 "event 0 start dummy time!~%")
+              (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
               (set! *outrag-section-started?* #t)
               )
             ((zero? (-> e sdc-time))
@@ -528,38 +547,65 @@
             )
           ;; advance idx
           (+! *outrag-event-idx* 1)
+          (case *outrag-event-idx*
+            ((0 1)
+              (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
+              )
+            (((- *outrag-event-max* 1))
+              ;; sum up remaining times for last section
+              (let ((sum 0))
+                (dotimes (i (- *outrag-event-max* 1))
+                  (+! sum (-> *outrag-sdc-times* i)))
+                ;; (format 0 "last event summed time ~D ~D~%" *outrag-event-idx* sum)
+                (set! *outrag-section-remaining-time* sum)
+                )
+              )
+            ((10)
+              (set! *outrag-section-remaining-time* (-> *outrag-events* 11 sdc-time))
+              )
+            ((11)
+              ;; dont reset timer here
+              )
+            (else
+              ;; (format 0 "event common time ~D~%" *outrag-event-idx*)
+              (set! *outrag-section-remaining-time* (-> *outrag-events* *outrag-event-idx* sdc-time))
+              )
+            )
           )
         )
       )
 
     (let* ((e (-> *outrag-events* *outrag-event-idx*)))
       ;; check if need to start section
-      (when (and (not *outrag-section-started?*)
+      (when (and (player-is-playing?)
+                 (not *outrag-section-started?*)
                  (not (name= (-> (level-get-target-inside *level*) name) 'training))) ;; player has left geyser
         (set! *outrag-section-started?* #t)
-        (set! *outrag-section-start-time* (real-current-time))
+        ;; (format 0 "YO next section start time set~%")
         )
-      ;; "pause" timer if we're in geyser or blackout
-      (when (or (name= (-> (level-get-target-inside *level*) name) 'training)
-                (>= (-> *game-info* blackout-time) (current-time)))
-        (+! *outrag-section-start-time* (/ TICKS_PER_SECOND 60))
+      ;; "tick" timer if we're not in geyser and not in blackout
+      (when (not (or (name= (-> (level-get-target-inside *level*) name) 'training)
+                     (level-loaded? 'intro)
+                     (level-loaded? 'title)
+                     (> (-> *game-info* blackout-time) (current-time))))
+        (-! *outrag-section-remaining-time* (/ TICKS_PER_SECOND 60))
         )
-      (when (< *outrag-event-idx* *outrag-event-max*)
+      (when (and (player-is-playing?) (< *outrag-event-idx* *outrag-event-max*))
         (let* ((y 215)
-              (section-time (case *outrag-event-idx*
-                  ((0 1) (-> *outrag-events* 2 sdc-time))
-                  (((- *outrag-event-max* 1)) 
-                    ;; sum up remaining times
-                    (let ((sum 0))
-                      (dotimes (i (- *outrag-event-max* 2))
-                        (+! sum (- (-> *outrag-events* i sdc-time) (-> *outrag-sdc-times* i))))
-                      sum
-                      )
-                    )
-                  (else (-> e sdc-time))
-                  ))
-              (time-elapsed (if *outrag-section-started?* (- (real-current-time) *outrag-section-start-time*) 0))
-              (time-remaining (- section-time time-elapsed))
+              ;; (section-time (case *outrag-event-idx*
+              ;;     ((0 1) (-> *outrag-events* 2 sdc-time))
+              ;;     (((- *outrag-event-max* 1)) 
+              ;;       ;; sum up remaining times
+              ;;       (let ((sum 0))
+              ;;         (dotimes (i (- *outrag-event-max* 2))
+              ;;           (+! sum (- (-> *outrag-events* i sdc-time) (-> *outrag-sdc-times* i))))
+              ;;         sum
+              ;;         )
+              ;;       )
+              ;;     (else (-> e sdc-time))
+              ;;     ))
+              ;; (time-elapsed (if *outrag-section-started?* (- (real-current-time) *outrag-section-remaining-time*) 0))
+              (time-remaining *outrag-section-remaining-time*)
               (timer-full-sec (/ time-remaining TICKS_PER_SECOND))
               (timer-min (/ timer-full-sec 60))
               (timer-sec (- timer-full-sec (* timer-min 60)))
@@ -568,7 +614,7 @@
           (clear *next-section-str*)
           
           ;; SDC checks
-          (when *mod-hard-mode?*
+          (when (and *mod-hard-mode?* (nonzero? *outrag-event-idx*))
             ;; check if player has failed this section (SDC)
             (when (and (< time-remaining 0) ;; time is up
                       *outrag-section-started?* ;; section has started
@@ -630,59 +676,61 @@
   )
 
 (defun draw-unlock-info ()
-  (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
-    ;; play unlock sound effect if we just met the req from last frame, and we're not fresh outta blackout (loading save)
-    (when (and (> *next-unlock-req* 0.0) (<= *next-unlock-req* (-> *game-info* money))
-               (> (current-time) (+ (-> *game-info* blackout-time) (seconds 3))))
-      (play-sound-file "unlock.mp3" (the int (-> *setting-control* default sfx-volume)))
-      )
-    
-    ;; find next unlock amount
-    (let ((tmp-unlock-req -1.0))
-      (dotimes (i *unlock-count*)
-        (let ((req (-> *outrag-unlock-counts* i)))
-          (when (and (> req (-> *game-info* money))
-                    (or (< tmp-unlock-req 0)
-                        (< req tmp-unlock-req)))
-              (set! tmp-unlock-req req)
+  (when (player-is-playing?)
+    (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
+      ;; play unlock sound effect if we just met the req from last frame, and we're not fresh outta blackout (loading save)
+      (when (and (> *next-unlock-req* 0.0) (<= *next-unlock-req* (-> *game-info* money))
+                (> (current-time) (+ (-> *game-info* blackout-time) (seconds 3))))
+        (play-sound-file "unlock.mp3" (the int (-> *setting-control* default sfx-volume)))
+        )
+      
+      ;; find next unlock amount
+      (let ((tmp-unlock-req -1.0))
+        (dotimes (i *unlock-count*)
+          (let ((req (-> *outrag-unlock-counts* i)))
+            (when (and (> req (-> *game-info* money))
+                      (or (< tmp-unlock-req 0)
+                          (< req tmp-unlock-req)))
+                (set! tmp-unlock-req req)
+              )
             )
           )
+        ;; only increase, to prevent
+        (when (> tmp-unlock-req *next-unlock-req*)
+          (set! *next-unlock-req* tmp-unlock-req)
+          )
         )
-      ;; only increase, to prevent
-      (when (> tmp-unlock-req *next-unlock-req*)
-        (set! *next-unlock-req* tmp-unlock-req)
-        )
-      )
 
-    (cond 
-      ((and (>= *next-unlock-req* 0) (<= *next-unlock-req* 2000))
-        ;; (let* ((p (ppointer->process *next-unlock-ptr*)))
-          (format (clear *next-unlock-str*) "Next Unlock in ")
-          ;; (format *next-unlock-str* (case (-> p type symbol)
-          ;;     (('eco-green)   "~6LGreen Eco Cluster~1L~%")
-          ;;     (('eco-blue)    "~7LBlue Eco Cluster~1L~%")
-          ;;     (('eco-red)     "~3LRed Eco Cluster~1L~%")
-          ;;     (('eco-yellow)  "~5LYellow Eco Cluster~1L~%")
-          ;;     (('ventgreen)   "~6LGreen Eco Vent~1L~%")
-          ;;     (('ventblue)    "~7LBlue Eco Vent~1L~%")
-          ;;     (('ventred)     "~3LRed Eco Vent~1L~%")
-          ;;     (('ventyellow)  "~5LYellow Eco Vent~1L~%")
-          ;;     )
-          ;;   )
-          (format *next-unlock-str* "~D Orb~S (~D/~D)"
-            (the int (- *next-unlock-req* (-> *game-info* money)))
-            (if (> (- *next-unlock-req* (-> *game-info* money)) 1) "s" "") ;; optional s :)
-            (the int (-> *game-info* money))
-            (the int *next-unlock-req*)
-            )
-          ;; )
-        (draw-string-xy *next-unlock-str* buf 508 215 (font-color white) (font-flags right shadow kerning))
-        )
-      (else
-        (format (clear *next-unlock-str*) "Next Unlock ~2LN/A")
-        (draw-string-xy *next-unlock-str* buf 508 215 (font-color white) (font-flags right shadow kerning))
-        )
-      )   
+      (cond 
+        ((and (>= *next-unlock-req* 0) (<= *next-unlock-req* 2000))
+          ;; (let* ((p (ppointer->process *next-unlock-ptr*)))
+            (format (clear *next-unlock-str*) "Next Unlock in ")
+            ;; (format *next-unlock-str* (case (-> p type symbol)
+            ;;     (('eco-green)   "~6LGreen Eco Cluster~1L~%")
+            ;;     (('eco-blue)    "~7LBlue Eco Cluster~1L~%")
+            ;;     (('eco-red)     "~3LRed Eco Cluster~1L~%")
+            ;;     (('eco-yellow)  "~5LYellow Eco Cluster~1L~%")
+            ;;     (('ventgreen)   "~6LGreen Eco Vent~1L~%")
+            ;;     (('ventblue)    "~7LBlue Eco Vent~1L~%")
+            ;;     (('ventred)     "~3LRed Eco Vent~1L~%")
+            ;;     (('ventyellow)  "~5LYellow Eco Vent~1L~%")
+            ;;     )
+            ;;   )
+            (format *next-unlock-str* "~D Orb~S (~D/~D)"
+              (the int (- *next-unlock-req* (-> *game-info* money)))
+              (if (> (- *next-unlock-req* (-> *game-info* money)) 1) "s" "") ;; optional s :)
+              (the int (-> *game-info* money))
+              (the int *next-unlock-req*)
+              )
+            ;; )
+          (draw-string-xy *next-unlock-str* buf 508 215 (font-color white) (font-flags right shadow kerning))
+          )
+        (else
+          (format (clear *next-unlock-str*) "Next Unlock ~2LN/A")
+          (draw-string-xy *next-unlock-str* buf 508 215 (font-color white) (font-flags right shadow kerning))
+          )
+        )   
+      )
     )
     (none)
   )
@@ -916,17 +964,9 @@
   (when (not *mod-hard-mode?*)
     (kill-entity-if-exists "robotboss-3"))
 
-  ;; draw the info about section, next unlockable
-  (case (-> *target* state name) :comp name=
-    (('target-title 'target-title-play 'target-title-wait 'target-continue) ;; nothing
-      )
-    (else
-      (when (not (paused?))
-        (draw-section-info)
-        (draw-unlock-info)
-        )
-      )
-    )
+  ;; (maybe) draw the info about section, next unlockable
+  (draw-section-info)
+  (draw-unlock-info)
 
   ;; check if player is near geyser vent and wants a hint
   (when (and *target* (or (in-bubble-m? -1311.39   6.77 1056.64  5.0) (in-bubble-m? -1418.61   3.81 1010.54  5.0))

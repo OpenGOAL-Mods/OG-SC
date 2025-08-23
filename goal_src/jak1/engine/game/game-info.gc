@@ -152,6 +152,8 @@
   "Get the permanent storage for a game-task"
   (-> this task-perm-list data arg0))
 
+(define-extern *mod-hard-mode?* symbol)
+(define-extern level-loaded? (function symbol symbol))
 (defmethod initialize! ((this game-info) (cause symbol) (save-to-load game-save) (continue-point-override string))
   "Initialize the game-info.
     The cause can be 'dead if you die, or 'game to reset everything.
@@ -262,6 +264,11 @@
            (set-continue! *game-info* arg2)
            (when arg3
              (load-game! *game-info* arg3)
+             ;; mod change - hack to reset SDC files if loaded from title screen, to avoid cheesing timer
+             (when (and *mod-hard-mode?* (level-loaded? 'title))
+              (initialize! *game-info* 'game (the-as game-save #f) "game-start")
+              (return 0)
+              )
              (set! arg2 (get-or-create-continue! *game-info*)))
            (suspend)
            (start arg0 arg2)
