@@ -61,7 +61,7 @@
 (define *outrag-event-idx* 0)
 ;; (defconstant *outrag-event-max* 13) ;; moved to game-save.gc
 
-(define *outrag-section-start-time* (the time-frame #f))
+(define *outrag-section-remaining-time* (the time-frame (seconds 780)))
 (define *outrag-section-started?* #f)
 (define *outrag-section-finished?* #f)
 ;; (define *outrag-sdc-times* (new 'global 'array 'time-frame *outrag-event-max*)) ;; moved to game-save.gc
@@ -313,7 +313,7 @@
       :filename "outrag-1631(1).mp3"
       ;; :filename-sdc "outrag-1631(1)-SDC.mp3"
       :geyser-play? #f
-      :sdc-time (seconds 600)
+      :sdc-time (seconds 0)
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         50  ;; (village1 1)
@@ -338,7 +338,7 @@
       :filename "outrag-1631(2).mp3"
       :filename-sdc "outrag-1631(2)-SDC.mp3"
       :geyser-play? #t
-      :sdc-time (seconds 0)
+      :sdc-time (seconds 600)
       :level-orb-counts (new 'static 'array int 16 
         50  ;; (training 0)
         50  ;; (village1 1)
@@ -396,7 +396,7 @@
     (format 0 "YO Resetting SC stuff~%")
     (set! *next-unlock-req* -1.0)
     (set! *outrag-event-idx* 0)
-    (set! *outrag-section-start-time* (real-current-time))
+    (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
     (set! *outrag-section-started?* #f)
     (set! *outrag-section-finished?* #f)
     (dotimes (i *outrag-event-max*)
@@ -482,9 +482,9 @@
                 )
               (else
                 ;; record this section remaining time
-                (format 0 "finishing event ~D ~%" *outrag-event-idx*)
+                (format 0 "finishing event ~D, recording time ~D ~%" *outrag-event-idx* (/ *outrag-section-remaining-time* TICKS_PER_SECOND))
                 ;; (set! *outrag-section-finished?* #t)
-                (set! (-> *outrag-sdc-times* *outrag-event-idx*) (- (real-current-time) *outrag-section-start-time*))
+                (set! (-> *outrag-sdc-times* *outrag-event-idx*) *outrag-section-remaining-time*)
                 )
               )
             ;; )
@@ -494,7 +494,8 @@
             ((zero? *outrag-event-idx*)
               ;; treat this as start of first section
               ;; (format 0 "YO zero idx set~%")
-              (set! *outrag-section-start-time* (real-current-time))
+              (format 0 "event 0 start dummy time!~%")
+              (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
               (set! *outrag-section-started?* #t)
               )
             ((zero? (-> e sdc-time))
@@ -546,6 +547,30 @@
             )
           ;; advance idx
           (+! *outrag-event-idx* 1)
+          (case *outrag-event-idx*
+            ((0 1)
+              (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
+              )
+            (((- *outrag-event-max* 1))
+              ;; sum up remaining times for last section
+              (let ((sum 0))
+                (dotimes (i (- *outrag-event-max* 1))
+                  (+! sum (-> *outrag-sdc-times* i)))
+                ;; (format 0 "last event summed time ~D ~D~%" *outrag-event-idx* sum)
+                (set! *outrag-section-remaining-time* sum)
+                )
+              )
+            ((10)
+              (set! *outrag-section-remaining-time* (-> *outrag-events* 11 sdc-time))
+              )
+            ((11)
+              ;; dont reset timer here
+              )
+            (else
+              ;; (format 0 "event common time ~D~%" *outrag-event-idx*)
+              (set! *outrag-section-remaining-time* (-> *outrag-events* *outrag-event-idx* sdc-time))
+              )
+            )
           )
         )
       )
@@ -557,29 +582,30 @@
                  (not (name= (-> (level-get-target-inside *level*) name) 'training))) ;; player has left geyser
         (set! *outrag-section-started?* #t)
         ;; (format 0 "YO next section start time set~%")
-        (set! *outrag-section-start-time* (real-current-time))
         )
-      ;; "pause" timer if we're in geyser or blackout
-      (when (or (name= (-> (level-get-target-inside *level*) name) 'training)
-                (> (-> *game-info* blackout-time) (current-time)))
-        (+! *outrag-section-start-time* (/ TICKS_PER_SECOND 60))
+      ;; "tick" timer if we're not in geyser and not in blackout
+      (when (not (or (name= (-> (level-get-target-inside *level*) name) 'training)
+                     (level-loaded? 'intro)
+                     (level-loaded? 'title)
+                     (> (-> *game-info* blackout-time) (current-time))))
+        (-! *outrag-section-remaining-time* (/ TICKS_PER_SECOND 60))
         )
       (when (and (player-is-playing?) (< *outrag-event-idx* *outrag-event-max*))
         (let* ((y 215)
-              (section-time (case *outrag-event-idx*
-                  ((0 1) (-> *outrag-events* 2 sdc-time))
-                  (((- *outrag-event-max* 1)) 
-                    ;; sum up remaining times
-                    (let ((sum 0))
-                      (dotimes (i (- *outrag-event-max* 2))
-                        (+! sum (- (-> *outrag-events* i sdc-time) (-> *outrag-sdc-times* i))))
-                      sum
-                      )
-                    )
-                  (else (-> e sdc-time))
-                  ))
-              (time-elapsed (if *outrag-section-started?* (- (real-current-time) *outrag-section-start-time*) 0))
-              (time-remaining (- section-time time-elapsed))
+              ;; (section-time (case *outrag-event-idx*
+              ;;     ((0 1) (-> *outrag-events* 2 sdc-time))
+              ;;     (((- *outrag-event-max* 1)) 
+              ;;       ;; sum up remaining times
+              ;;       (let ((sum 0))
+              ;;         (dotimes (i (- *outrag-event-max* 2))
+              ;;           (+! sum (- (-> *outrag-events* i sdc-time) (-> *outrag-sdc-times* i))))
+              ;;         sum
+              ;;         )
+              ;;       )
+              ;;     (else (-> e sdc-time))
+              ;;     ))
+              ;; (time-elapsed (if *outrag-section-started?* (- (real-current-time) *outrag-section-remaining-time*) 0))
+              (time-remaining *outrag-section-remaining-time*)
               (timer-full-sec (/ time-remaining TICKS_PER_SECOND))
               (timer-min (/ timer-full-sec 60))
               (timer-sec (- timer-full-sec (* timer-min 60)))
@@ -588,7 +614,7 @@
           (clear *next-section-str*)
           
           ;; SDC checks
-          (when *mod-hard-mode?*
+          (when (and *mod-hard-mode?* (nonzero? *outrag-event-idx*))
             ;; check if player has failed this section (SDC)
             (when (and (< time-remaining 0) ;; time is up
                       *outrag-section-started?* ;; section has started
