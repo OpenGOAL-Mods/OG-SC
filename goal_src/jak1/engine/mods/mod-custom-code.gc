@@ -209,7 +209,7 @@
         )
       )
     (new 'static 'outrag-event
-      :orb-count 847
+      :orb-count 853
       :filename "outrag-758.mp3"
       :filename-sdc "outrag-758-SDC.mp3"
       :geyser-play? #t
@@ -219,7 +219,7 @@
         21  ;; (village1 1)
         67  ;; (beach 2)
         0   ;; (jungle 3)
-        91  ;; (misty 4)
+        97  ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         57  ;; (sunken 7)
@@ -234,7 +234,7 @@
         )
       )
     (new 'static 'outrag-event
-      :orb-count 1100
+      :orb-count 1106
       :filename "outrag-1041.mp3"
       :filename-sdc "outrag-1041-SDC.mp3"
       :geyser-play? #t
@@ -244,7 +244,7 @@
         21  ;; (village1 1)
         135 ;; (beach 2)
         0   ;; (jungle 3)
-        91  ;; (misty 4)
+        97  ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         111 ;; (sunken 7)
@@ -259,7 +259,7 @@
         )
       )
     (new 'static 'outrag-event
-      :orb-count 1395
+      :orb-count 1401
       :filename "outrag-1336.mp3"
       :filename-sdc "outrag-1336-SDC.mp3"
       :geyser-play? #t
@@ -269,7 +269,7 @@
         50  ;; (village1 1)
         135 ;; (beach 2)
         99  ;; (jungle 3)
-        91  ;; (misty 4)
+        97  ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         111 ;; (sunken 7)
@@ -284,7 +284,7 @@
         )
       )
     (new 'static 'outrag-event
-      :orb-count 1580
+      :orb-count 1586
       :filename "outrag-1580.mp3"
       :filename-sdc "outrag-1580-SDC.mp3"
       :geyser-play? #t
@@ -294,7 +294,7 @@
         50  ;; (village1 1)
         135 ;; (beach 2)
         99  ;; (jungle 3)
-        91  ;; (misty 4)
+        97  ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         164 ;; (sunken 7)
@@ -309,7 +309,7 @@
         )
       )
     (new 'static 'outrag-event
-      :orb-count 1631
+      :orb-count 1637
       :filename "outrag-1631(1).mp3"
       ;; :filename-sdc "outrag-1631(1)-SDC.mp3"
       :geyser-play? #f
@@ -319,7 +319,7 @@
         50  ;; (village1 1)
         135 ;; (beach 2)
         150 ;; (jungle 3)
-        91  ;; (misty 4)
+        97  ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         164 ;; (sunken 7)
@@ -334,7 +334,7 @@
         )
       )
     (new 'static 'outrag-event
-      :orb-count 1631
+      :orb-count 1637
       :filename "outrag-1631(2).mp3"
       :filename-sdc "outrag-1631(2)-SDC.mp3"
       :geyser-play? #t
@@ -344,7 +344,7 @@
         50  ;; (village1 1)
         135 ;; (beach 2)
         150 ;; (jungle 3)
-        91  ;; (misty 4)
+        97  ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         164 ;; (sunken 7)
@@ -529,10 +529,25 @@
                      (>= (-> *game-info* money) 2000)
                      (not (process-by-name 'sc-finish-proc *active-pool*))) ;; not already running this, just to be safe
             (set! *outrag-sdc-unlocked?* #t)
+            ;; autosave so we don't clear unlocked flag
+            (cond
+              ((< (-> *game-info* auto-save-which) 0)
+                (format 0 "2000 orbs - NO AUTOSAVE DETECTED, CREATING ONE FOR SLOT 0 NOW~%")
+                ;; make sure its enabled
+                (set! (-> *setting-control* current auto-save) #t)
+                (set! (-> *setting-control* default auto-save) #t)
+                (auto-save-command 'save 0 0 *target*)
+                )
+              (else
+                ;; (format 0 "2000 orbs - SAVING IN SLOT ~D NOW~%" (-> *game-info* auto-save-which))
+                (auto-save-command 'save 0 (-> *game-info* auto-save-which) *target*)
+                )
+              )
             (process-spawn-function process
               :name 'sc-finish-proc
               ;This lambda is our function
               (lambda :behavior process ()
+                (suspend-for (seconds 1.0)) ;; pause for a bit
                 (stop-all-sounds)
                 (play-sound-file "outrag-2000.mp3" (the int (-> *setting-control* default dialog-volume)))
                 (suspend-for (seconds 0.1))
@@ -563,111 +578,113 @@
             ((10)
               (set! *outrag-section-remaining-time* (-> *outrag-events* 11 sdc-time))
               )
-            ((11)
-              ;; dont reset timer here
+            ((11 12 13)
+              ;; dont reset timer here / out of bounds
               )
             (else
-              ;; (format 0 "event common time ~D~%" *outrag-event-idx*)
+              (format 0 "event common time ~D~%" *outrag-event-idx*)
               (set! *outrag-section-remaining-time* (-> *outrag-events* *outrag-event-idx* sdc-time))
               )
             )
           )
         )
       )
-
-    (let* ((e (-> *outrag-events* *outrag-event-idx*)))
-      ;; check if need to start section
-      (when (and (player-is-playing?)
-                 (not *outrag-section-started?*)
-                 (not (name= (-> (level-get-target-inside *level*) name) 'training))) ;; player has left geyser
-        (set! *outrag-section-started?* #t)
-        ;; (format 0 "YO next section start time set~%")
-        )
-      ;; "tick" timer if we're not in geyser and not in blackout
-      (when (not (or (name= (-> (level-get-target-inside *level*) name) 'training)
-                     (level-loaded? 'intro)
-                     (level-loaded? 'title)
-                     (> (-> *game-info* blackout-time) (current-time))))
-        (-! *outrag-section-remaining-time* (/ TICKS_PER_SECOND 60))
-        )
-      (when (and (player-is-playing?) (< *outrag-event-idx* *outrag-event-max*))
-        (let* ((y 215)
-              ;; (section-time (case *outrag-event-idx*
-              ;;     ((0 1) (-> *outrag-events* 2 sdc-time))
-              ;;     (((- *outrag-event-max* 1)) 
-              ;;       ;; sum up remaining times
-              ;;       (let ((sum 0))
-              ;;         (dotimes (i (- *outrag-event-max* 2))
-              ;;           (+! sum (- (-> *outrag-events* i sdc-time) (-> *outrag-sdc-times* i))))
-              ;;         sum
-              ;;         )
-              ;;       )
-              ;;     (else (-> e sdc-time))
-              ;;     ))
-              ;; (time-elapsed (if *outrag-section-started?* (- (real-current-time) *outrag-section-remaining-time*) 0))
-              (time-remaining *outrag-section-remaining-time*)
-              (timer-full-sec (/ time-remaining TICKS_PER_SECOND))
-              (timer-min (/ timer-full-sec 60))
-              (timer-sec (- timer-full-sec (* timer-min 60)))
-              )
-          ;; draw section info to bottom left
-          (clear *next-section-str*)
-          
-          ;; SDC checks
-          (when (and *mod-hard-mode?* (nonzero? *outrag-event-idx*))
-            ;; check if player has failed this section (SDC)
-            (when (and (< time-remaining 0) ;; time is up
-                      *outrag-section-started?* ;; section has started
-                      (< (-> *game-info* money) (-> e orb-count)) ;; player has not met orb req (for case when headed back to geyser)
-                      (not (process-by-name 'sdc-fail-proc *active-pool*))) ;; not already failing player
-              ;; reset game loser
-              (process-spawn-function process
-                :name 'sdc-fail-proc
-                ;This lambda is our function
-                (lambda :behavior process ()
-                  ;; play fail sound
-                  (stop-all-sounds)
-                  (play-sound-file "outrag-fail-SDC.mp3"
-                    (the int (-> *setting-control* default dialog-volume)))
-                  (suspend-for (seconds 0.1))
-                  ;; suspend until outrag-fail-SDC ends
-                  (while (is-sound-playing "outrag-fail-SDC.mp3")
-                    (suspend))
-                  (reset-sc-stuff)
-                  (initialize! *game-info* 'game (the-as game-save #f) "game-start")
-                  (set-master-mode 'game)
+    
+    (when (< *outrag-event-idx* *outrag-event-max*)
+      (let* ((e (-> *outrag-events* *outrag-event-idx*)))
+        ;; check if need to start section
+        (when (and (player-is-playing?)
+                  (not *outrag-section-started?*)
+                  (not (name= (-> (level-get-target-inside *level*) name) 'training))) ;; player has left geyser
+          (set! *outrag-section-started?* #t)
+          ;; (format 0 "YO next section start time set~%")
+          )
+        ;; "tick" timer if we're not in geyser and not in blackout
+        (when (not (or (name= (-> (level-get-target-inside *level*) name) 'training)
+                      (level-loaded? 'intro)
+                      (level-loaded? 'title)
+                      (> (-> *game-info* blackout-time) (current-time))))
+          (-! *outrag-section-remaining-time* (/ TICKS_PER_SECOND 60))
+          )
+        (when (and (player-is-playing?) (< *outrag-event-idx* *outrag-event-max*))
+          (let* ((y 215)
+                ;; (section-time (case *outrag-event-idx*
+                ;;     ((0 1) (-> *outrag-events* 2 sdc-time))
+                ;;     (((- *outrag-event-max* 1)) 
+                ;;       ;; sum up remaining times
+                ;;       (let ((sum 0))
+                ;;         (dotimes (i (- *outrag-event-max* 2))
+                ;;           (+! sum (- (-> *outrag-events* i sdc-time) (-> *outrag-sdc-times* i))))
+                ;;         sum
+                ;;         )
+                ;;       )
+                ;;     (else (-> e sdc-time))
+                ;;     ))
+                ;; (time-elapsed (if *outrag-section-started?* (- (real-current-time) *outrag-section-remaining-time*) 0))
+                (time-remaining *outrag-section-remaining-time*)
+                (timer-full-sec (/ time-remaining TICKS_PER_SECOND))
+                (timer-min (/ timer-full-sec 60))
+                (timer-sec (- timer-full-sec (* timer-min 60)))
+                )
+            ;; draw section info to bottom left
+            (clear *next-section-str*)
+            
+            ;; SDC checks
+            (when (and *mod-hard-mode?* (nonzero? *outrag-event-idx*))
+              ;; check if player has failed this section (SDC)
+              (when (and (< time-remaining 0) ;; time is up
+                        *outrag-section-started?* ;; section has started
+                        (< (-> *game-info* money) (-> e orb-count)) ;; player has not met orb req (for case when headed back to geyser)
+                        (not (process-by-name 'sdc-fail-proc *active-pool*))) ;; not already failing player
+                ;; reset game loser
+                (process-spawn-function process
+                  :name 'sdc-fail-proc
+                  ;This lambda is our function
+                  (lambda :behavior process ()
+                    ;; play fail sound
+                    (stop-all-sounds)
+                    (play-sound-file "outrag-fail-SDC.mp3"
+                      (the int (-> *setting-control* default dialog-volume)))
+                    (suspend-for (seconds 0.1))
+                    ;; suspend until outrag-fail-SDC ends
+                    (while (is-sound-playing "outrag-fail-SDC.mp3")
+                      (suspend))
+                    (reset-sc-stuff)
+                    (initialize! *game-info* 'game (the-as game-save #f) "game-start")
+                    (set-master-mode 'game)
+                    )
                   )
                 )
-              )
 
-            ;; (when (not *outrag-section-finished?*)
-              (if (> time-remaining 0)
-                (if (>= timer-sec 10) ;; too lazy to figure out zero padding for floats
-                  (format *next-section-str* "TIME REMAINING: ~D:~D~%" timer-min timer-sec)
-                  (format *next-section-str* "TIME REMAINING: ~D:0~D~%" timer-min timer-sec)
+              ;; (when (not *outrag-section-finished?*)
+                (if (> time-remaining 0)
+                  (if (>= timer-sec 10) ;; too lazy to figure out zero padding for floats
+                    (format *next-section-str* "TIME REMAINING: ~D:~D~%" timer-min timer-sec)
+                    (format *next-section-str* "TIME REMAINING: ~D:0~D~%" timer-min timer-sec)
+                    )
+                  (format *next-section-str* "~3LTIME\c12S UP! YOU FAILED~0L~%")
                   )
-                (format *next-section-str* "~3LTIME\c12S UP! YOU FAILED~0L~%")
-                )
+                (-! y 8)
+                ;; )
+              )
+            
+            ;; show return to geyser reminder
+            (when (and (>= (-> *game-info* money) (-> e orb-count)) ;; player has met orb req
+                      (> *outrag-event-idx* 1)
+                      (-> e geyser-play?))
+              (format *next-section-str* "~3LReturn to Geyser Rock!~1L~%")
               (-! y 8)
-              ;; )
+              )
+            (case *outrag-event-idx*
+              ((0 1)
+                (format *next-section-str* "Connection ~D Goal: ~D Orbs" 1 169))
+              ((11 12)
+                (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 2) (-> e orb-count)))
+              (else
+                (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 1) (-> e orb-count)))
+              )
+            (draw-string-xy *next-section-str* buf 4 y (font-color white) (font-flags shadow kerning))
             )
-          
-          ;; show return to geyser reminder
-          (when (and (>= (-> *game-info* money) (-> e orb-count)) ;; player has met orb req
-                    (> *outrag-event-idx* 1)
-                    (-> e geyser-play?))
-            (format *next-section-str* "~3LReturn to Geyser Rock!~1L~%")
-            (-! y 8)
-            )
-          (case *outrag-event-idx*
-            ((0 1)
-              (format *next-section-str* "Connection ~D Goal: ~D Orbs" 1 169))
-            ((11 12)
-              (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 2) (-> e orb-count)))
-            (else
-              (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 1) (-> e orb-count)))
-            )
-          (draw-string-xy *next-section-str* buf 4 y (font-color white) (font-flags shadow kerning))
           )
         )
       )
@@ -887,6 +904,7 @@
   (complete-entity-if-exists "ecoventrock-5")
   (complete-entity-if-exists "ecoventrock-3")
   (complete-entity-if-exists "ecoventrock-6")
+  (kill-entity-if-exists "seagullflock-1")
   ;; jungle
   (complete-entity-if-exists "reflector-mirror-2")
   (complete-entity-if-exists "periscope-11")
@@ -950,6 +968,7 @@
   (complete-entity-if-exists "ram-7")
   (complete-entity-if-exists "ram-14")
   (complete-entity-if-exists "ram-13")
+  (kill-entity-if-exists "crate-2986")
   ;; citadel
   (complete-entity-if-exists "citb-generator-1")
   (complete-entity-if-exists "citb-generator-2")
@@ -967,6 +986,15 @@
   ;; (maybe) draw the info about section, next unlockable
   (draw-section-info)
   (draw-unlock-info)
+
+  ;; check if player should be dead but isn't
+  (when (and *target* 
+             (!= (-> *target* state name) 'target-grab)
+             (not (logtest? (-> *target* state-flags) (state-flags being-attacked dying)))
+             (<= (-> *target* fact health) 0.0))
+    ;; (format 0 "killing player backup~%")
+    (send-event *target* 'attack-invinc #f (static-attack-info ((mode 'generic))))
+    )
 
   ;; check if player is near geyser vent and wants a hint
   (when (and *target* (or (in-bubble-m? -1311.39   6.77 1056.64  5.0) (in-bubble-m? -1418.61   3.81 1010.54  5.0))
