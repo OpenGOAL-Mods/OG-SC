@@ -262,6 +262,11 @@
            (set-continue! *game-info* arg2)
            (when arg3
              (load-game! *game-info* arg3)
+             ;; mod change - hack to reset SDC files if loaded from title screen, to avoid cheesing timer
+             (when (and *mod-hard-mode?* (level-loaded? 'title))
+              (initialize! *game-info* 'game (the-as game-save #f) "game-start")
+              (return 0)
+              )
              (set! arg2 (get-or-create-continue! *game-info*)))
            (suspend)
            (start arg0 arg2)

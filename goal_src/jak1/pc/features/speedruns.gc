@@ -514,20 +514,21 @@
   (none)
   )
 
+;; default to geyser first warp so they dont spawn at 0,0,0 on loading save
 (define *tmp-continue-point* (new 'static 'continue-point
                              :name "tmp"
                              :level #f
                              :flags (continue-flags speedrun)
-                             :trans (new 'static 'vector :w 1.0)
-                             :quat (new 'static 'quaternion :w 1.0)
-                             :camera-trans (new 'static 'vector :w 1.0)
-                             :camera-rot (new 'static 'array float 9)
+                             :trans (new 'static 'vector :x (meters -1312.6889) :y (meters 6.7725) :z (meters 1056.7675) :w 1.0)
+                             :quat (new 'static 'quaternion :y 1.0 :w 0.0)
+                             :camera-trans (new 'static 'vector :x (meters -1321.8052) :y (meters 11.9198) :z (meters 1065.3253) :w 1.0)
+                             :camera-rot (new 'static 'array float 9 -0.6857 0.0000 -0.7278 0.0877 0.9926 -0.0827 0.7225 -0.1206 -0.6807)
                              :load-commands '()
-                             :vis-nick #f
-                             :lev0 #f
-                             :disp0 #f
-                             :lev1 #f
-                             :disp1 #f
+                             :vis-nick 'tra
+                             :lev0 'training
+                             :disp0 'display
+                             :lev1 'village1
+                             :disp1 'special
                              )
     )
 

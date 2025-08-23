@@ -102,7 +102,7 @@
   (set! (-> *options-remap* (progress-screen memcard-removed)) *ok-options*)
   (set! (-> *options-remap* (progress-screen memcard-no-data)) *yes-no-options*)
   (set! (-> *options-remap* (progress-screen title)) *title*)
-  (set! (-> *options-remap* (progress-screen title-sdc)) *title-sdc-pc*)
+  (set! (-> *options-remap* (progress-screen title-sdc)) *title-sdc*)
   (set! (-> *options-remap* (progress-screen settings-title)) *options*)
   (set! (-> *options-remap* (progress-screen auto-save)) *ok-options*)
   (set! (-> *options-remap* (progress-screen pal-change-to-60hz)) *yes-no-options*)
