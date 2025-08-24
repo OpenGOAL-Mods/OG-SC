@@ -54,6 +54,7 @@
    (geyser-play? symbol)
    (sdc-time int)
    (level-orb-counts int 16) ;; expected total orb counts per level
+   (conn-id int)
    )
   )
 
@@ -100,6 +101,7 @@
       :filename-sdc "outrag-0-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 0)
+      :conn-id 0
       )
     (new 'static 'outrag-event
       :orb-count 50
@@ -107,6 +109,7 @@
       :filename-sdc "outrag-50-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 0)
+      :conn-id 0
       )
     (new 'static 'outrag-event
       :orb-count 169
@@ -132,6 +135,7 @@
         0   ;; (lavatube 14)
         88  ;; (citadel 15)
         )
+      :conn-id 0
       )
     (new 'static 'outrag-event
       :orb-count 358
@@ -157,6 +161,7 @@
         0   ;; (lavatube 14)
         88  ;; (citadel 15)
         )
+      :conn-id 1
       )
     (new 'static 'outrag-event
       :orb-count 525
@@ -182,6 +187,7 @@
         0   ;; (lavatube 14)
         88  ;; (citadel 15)
         )
+      :conn-id 2
       )
     (new 'static 'outrag-event
       :orb-count 676
@@ -207,6 +213,7 @@
         0   ;; (lavatube 14)
         88  ;; (citadel 15)
         )
+      :conn-id 3
       )
     (new 'static 'outrag-event
       :orb-count 853
@@ -232,6 +239,7 @@
         0   ;; (lavatube 14)
         133 ;; (citadel 15)
         )
+      :conn-id 4
       )
     (new 'static 'outrag-event
       :orb-count 1106
@@ -257,6 +265,7 @@
         0   ;; (lavatube 14)
         133 ;; (citadel 15)
         )
+      :conn-id 5
       )
     (new 'static 'outrag-event
       :orb-count 1401
@@ -282,6 +291,7 @@
         0   ;; (lavatube 14)
         180 ;; (citadel 15)
         )
+      :conn-id 6
       )
     (new 'static 'outrag-event
       :orb-count 1586
@@ -307,6 +317,7 @@
         0   ;; (lavatube 14)
         180 ;; (citadel 15)
         )
+      :conn-id 7
       )
     (new 'static 'outrag-event
       :orb-count 1637
@@ -332,6 +343,7 @@
         0   ;; (lavatube 14)
         180 ;; (citadel 15)
         )
+      :conn-id 8
       )
     (new 'static 'outrag-event
       :orb-count 1637
@@ -357,6 +369,7 @@
         0   ;; (lavatube 14)
         180 ;; (citadel 15)
         )
+      :conn-id 8
       )
     (new 'static 'outrag-event
       :orb-count 2000
@@ -382,8 +395,95 @@
         50  ;; (lavatube 14)
         200 ;; (citadel 15)
         )
+      :conn-id 9
       )
   )))
+
+(define *outrag-conn-counts* (new 'static 'array int 10
+    169
+    358
+    525
+    676
+    853
+    1106
+    1401
+    1586
+    1637
+    2000
+    )
+  )
+
+(define *outrag-conn-times* (new 'static 'array time-frame 10
+    (seconds 780);; 169
+    (seconds 1020);; 358
+    (seconds 1260);; 525
+    (seconds 960);; 676
+    (seconds 1260);; 853
+    (seconds 1440);; 1106
+    (seconds 2160);; 1401
+    (seconds 1920);; 1586
+    (seconds 600);; 1637
+    (seconds 0);; 2000
+    )
+  )
+
+(defun outrag-death-reset-counter ()
+  (+! (-> *game-info* total-deaths) 1)
+  (when (< *outrag-event-idx* *outrag-event-max*)
+    (+! (-> *game-info* deaths-per-level (-> *outrag-events* *outrag-event-idx* conn-id)) 1))
+  (none)
+  )
+
+(define *ms-text* (new 'global 'string 128 (the string #f)))
+(defun get-min-sec-text ((t time-frame))
+  (let* ((timer-full-sec (/ t TICKS_PER_SECOND))
+         (timer-min (/ timer-full-sec 60))
+         (timer-sec (- timer-full-sec (* timer-min 60))))
+    (if (>= timer-sec 10) ;; too lazy to figure out zero padding for floats
+      (format (clear *ms-text*) "~D:~D" timer-min timer-sec)
+      (format (clear *ms-text*) "~D:0~D" timer-min timer-sec)
+      )
+    )
+  *ms-text*
+  )
+
+(define *conn-text* (new 'global 'string 128 (the string #f)))
+(defun get-mod-stat-text ((want-idx int))
+  (cond
+    ((> want-idx (-> *outrag-events* *outrag-event-idx* conn-id))
+      ;; this is a connection we haven't reached yet
+      (format (clear *conn-text*) "<  ~2LCONNECTION ~D~%???? / ???? ORBS~%" (+ want-idx 1))
+      )
+    ((= want-idx (-> *outrag-events* *outrag-event-idx* conn-id))
+      ;; this is the active connection
+      (format (clear *conn-text*) "<  ~3LCONNECTION ~D~%~12L~D / ~D ORBS" (+ want-idx 1) (the int (-> *game-info* money)) (-> *outrag-conn-counts* want-idx))
+      (format *conn-text* "~%~D DEATHS / RESETS" (-> *game-info* deaths-per-level want-idx))
+      (when *mod-hard-mode?*
+        (format *conn-text* "~%TIME REMAINING: ~S /" (get-min-sec-text *outrag-section-remaining-time*))
+        (format *conn-text* " ~S" (get-min-sec-text (-> *outrag-conn-times* want-idx))))
+      )
+    (else
+      ;; this is a completed connection
+      (format (clear *conn-text*) "<  ~6LCONNECTION ~D~%~32L~D / ~D ORBS" (+ want-idx 1) (-> *outrag-conn-counts* want-idx) (-> *outrag-conn-counts* want-idx))
+      (format *conn-text* "~%~D DEATHS / RESETS" (-> *game-info* deaths-per-level want-idx))
+      (when *mod-hard-mode?*
+        (format *conn-text* "~%TIME REMAINING: ~S /" (get-min-sec-text (-> *outrag-sdc-times* want-idx)))
+        (format *conn-text* " ~S" (get-min-sec-text (-> *outrag-conn-times* want-idx))))
+      )
+    )
+
+  *conn-text*
+  )
+
+(defun get-mod-stats-heading ()
+  (clear *conn-text*)
+  (format *conn-text* "~S ~%" 
+    (if *mod-hard-mode?* "SUPER DUPER CHARGED" "SUPER CHARGED"))
+  (format *conn-text* "~D DEATHS / RESETS" (-> *game-info* total-deaths))
+
+  *conn-text*
+  )
+
 
 (defun jak-touch-ground? ()
  (and *target*
@@ -399,10 +499,6 @@
     (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
     (set! *outrag-section-started?* #f)
     (set! *outrag-section-finished?* #f)
-    (dotimes (i *outrag-event-max*)
-      ;; reset all section times to 0 - I guess we don't really need this? idk why its crashing tho
-      ;; (set! (-> *outrag-sdc-times* i) 0)
-      )
     )
   (none)
   )
@@ -455,135 +551,140 @@
 
 (defun draw-section-info ()
   (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf)) (bucket-id subtitle))
-    (let* ((e (-> *outrag-events* *outrag-event-idx*)))
-      (when (and (player-is-playing?)
-                 (< *outrag-event-idx* *outrag-event-max*)
-                 (>= (-> *game-info* money) (-> e orb-count)) ;; player has met orb req
-                 )
-        
-        ;; check if we should play voiceline and advance to next section
-        (when (and (jak-touch-ground?) ;; player on the ground
-                   (or (not (-> e geyser-play?)) ;; this event plays anywhere
-                       (and (name= (-> (level-get-target-inside *level*) name) 'training) ;; player is in geyser...
-                            ;; ...and has (at least 3/4) full blue eco (20 sec is full)
-                            (send-event *target* 'query 'powerup (pickup-type eco-blue))
-                            (> (- (the-as time-frame (-> *target* fact eco-timeout)) 
-                                  (- (-> *display* game-frame-counter) (-> *target* fact eco-pickup-time))
-                                  )
-                               (seconds 15))
-                            )
-                       )
-                   )
-          ;; SDC - track playtime for this section
-          ;; (when (not *outrag-section-finished?*)
-            (cond
-              ((zero? (-> e sdc-time))
-                ;; dont record timer for fake sections
-                )
-              (else
-                ;; record this section remaining time
-                (format 0 "finishing event ~D, recording time ~D ~%" *outrag-event-idx* (/ *outrag-section-remaining-time* TICKS_PER_SECOND))
-                ;; (set! *outrag-section-finished?* #t)
-                (set! (-> *outrag-sdc-times* *outrag-event-idx*) *outrag-section-remaining-time*)
-                )
-              )
-            ;; )
-          (format 0 "playing event ~D with target state ~S~%" *outrag-event-idx* (-> *target* next-state name))
-          ;; track event start/finish
-          (cond
-            ((zero? *outrag-event-idx*)
-              ;; treat this as start of first section
-              ;; (format 0 "YO zero idx set~%")
-              (format 0 "event 0 start dummy time!~%")
-              (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
-              (set! *outrag-section-started?* #t)
-              )
-            ((zero? (-> e sdc-time))
-              ;; do nothing for fake sections
-              )
-            (else
-              ;; reset this for next section
-              (set! *outrag-section-started?* #f)
-              ;; (set! *outrag-section-finished?* #f)
-              )
-            )
-          ;; maybe play josh voiceover
-          (let ((filename (if *mod-hard-mode?* (-> e filename-sdc) (-> e filename))))
-            (when (and filename (nonzero? filename))
-              (process-spawn-function process
-                ;; :name 'voice-proc
-                ;This lambda is our function
-                (lambda :behavior process ((filename string))
-                  (suspend-for (seconds 1.0)) ;; pause for a bit
-                  (stop-all-sounds)
-                  (play-sound-file filename (the int (-> *setting-control* default dialog-volume)))
+    ;; special case for 2000 SC -> unlock super-duper-charged mode
+    (when (and (= *outrag-event-idx* *outrag-event-max*)
+               (not *mod-hard-mode?*) 
+               (not *outrag-sdc-unlocked?*) 
+               (>= (-> *game-info* money) 2000)
+               (in-bubble-m? 3022.13 481.33 -4870.85 2.0)
+               (not (process-by-name 'sc-finish-proc *active-pool*))) ;; not already running this, just to be safe
+      (set! *outrag-sdc-unlocked?* #t)
+      ;; autosave so we don't clear unlocked flag
+      (cond
+        ((< (-> *game-info* auto-save-which) 0)
+          (format 0 "2000 orbs - NO AUTOSAVE DETECTED, CREATING ONE FOR SLOT 0 NOW~%")
+          ;; make sure its enabled
+          (set! (-> *setting-control* current auto-save) #t)
+          (set! (-> *setting-control* default auto-save) #t)
+          (auto-save-command 'save 0 0 *target*)
+          )
+        (else
+          ;; (format 0 "2000 orbs - SAVING IN SLOT ~D NOW~%" (-> *game-info* auto-save-which))
+          (auto-save-command 'save 0 (-> *game-info* auto-save-which) *target*)
+          )
+        )
+      (process-spawn-function process
+        :name 'sc-finish-proc
+        ;This lambda is our function
+        (lambda :behavior process ()
+          (process-grab? *target*)
+          (suspend-for (seconds 1.0)) ;; pause for a bit
+          (stop-all-sounds)
+          (play-sound-file "outrag-2000.mp3" (the int (-> *setting-control* default dialog-volume)))
+          (suspend-for (seconds 0.1))
+          ;; suspend until outrag-2000 ends
+          (while (is-sound-playing "outrag-2000.mp3")
+            (suspend))
+          ;; reset to title screen
+          (initialize! *game-info* 'game (the-as game-save #f) "title-start")
+          (set-master-mode 'game)
+          )
+        )
+      )
+
+    (when (< *outrag-event-idx* *outrag-event-max*)
+      (let* ((e (-> *outrag-events* *outrag-event-idx*)))
+        (when (and (player-is-playing?)
+                  (>= (-> *game-info* money) (-> e orb-count)) ;; player has met orb req
                   )
-                filename
+          
+          ;; check if we should play voiceline and advance to next section
+          (when (and (jak-touch-ground?) ;; player on the ground
+                    (or (not (-> e geyser-play?)) ;; this event plays anywhere
+                        (and (name= (-> (level-get-target-inside *level*) name) 'training) ;; player is in geyser...
+                              ;; ...and has (at least 3/4) full blue eco (20 sec is full)
+                              (send-event *target* 'query 'powerup (pickup-type eco-blue))
+                              (> (- (the-as time-frame (-> *target* fact eco-timeout)) 
+                                    (- (-> *display* game-frame-counter) (-> *target* fact eco-pickup-time))
+                                    )
+                                (seconds 15))
+                              )
+                        )
+                    )
+            ;; SDC - track playtime for this section
+            ;; (when (not *outrag-section-finished?*)
+              (cond
+                ((zero? (-> e sdc-time))
+                  ;; dont record timer for fake sections
+                  )
+                (else
+                  ;; record this section remaining time
+                  (format 0 "finishing event ~D, recording time ~D ~%" *outrag-event-idx* (/ *outrag-section-remaining-time* TICKS_PER_SECOND))
+                  ;; (set! *outrag-section-finished?* #t)
+                  (set! (-> *outrag-sdc-times* (-> e conn-id)) *outrag-section-remaining-time*)
+                  )
                 )
-              )
-            )
-          ;; special case for 2000 SC -> unlock super-duper-charged mode (we already did geyser check earlier ^^^^)
-          (when (and (= *outrag-event-idx* (- *outrag-event-max* 1)) 
-                     (not *mod-hard-mode?*) 
-                     (not *outrag-sdc-unlocked?*) 
-                     (>= (-> *game-info* money) 2000)
-                     (not (process-by-name 'sc-finish-proc *active-pool*))) ;; not already running this, just to be safe
-            (set! *outrag-sdc-unlocked?* #t)
-            ;; autosave so we don't clear unlocked flag
+              ;; )
+            (format 0 "playing event ~D with target state ~S~%" *outrag-event-idx* (-> *target* next-state name))
+            ;; track event start/finish
             (cond
-              ((< (-> *game-info* auto-save-which) 0)
-                (format 0 "2000 orbs - NO AUTOSAVE DETECTED, CREATING ONE FOR SLOT 0 NOW~%")
-                ;; make sure its enabled
-                (set! (-> *setting-control* current auto-save) #t)
-                (set! (-> *setting-control* default auto-save) #t)
-                (auto-save-command 'save 0 0 *target*)
+              ((zero? *outrag-event-idx*)
+                ;; treat this as start of first section
+                ;; (format 0 "YO zero idx set~%")
+                ;; (format 0 "event 0 start dummy time!~%")
+                (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
+                (set! *outrag-section-started?* #t)
+                )
+              ((zero? (-> e sdc-time))
+                ;; do nothing for fake sections
                 )
               (else
-                ;; (format 0 "2000 orbs - SAVING IN SLOT ~D NOW~%" (-> *game-info* auto-save-which))
-                (auto-save-command 'save 0 (-> *game-info* auto-save-which) *target*)
+                ;; reset this for next section
+                (set! *outrag-section-started?* #f)
+                ;; (set! *outrag-section-finished?* #f)
                 )
               )
-            (process-spawn-function process
-              :name 'sc-finish-proc
-              ;This lambda is our function
-              (lambda :behavior process ()
-                (suspend-for (seconds 1.0)) ;; pause for a bit
-                (stop-all-sounds)
-                (play-sound-file "outrag-2000.mp3" (the int (-> *setting-control* default dialog-volume)))
-                (suspend-for (seconds 0.1))
-                ;; suspend until outrag-2000 ends
-                (while (is-sound-playing "outrag-2000.mp3")
-                  (suspend))
-                ;; reset to title screen
-                (initialize! *game-info* 'game (the-as game-save #f) "title-start")
-                (set-master-mode 'game)
+            ;; maybe play josh voiceover
+            (let ((filename (if *mod-hard-mode?* (-> e filename-sdc) (-> e filename))))
+              (when (and filename (nonzero? filename))
+                (process-spawn-function process
+                  ;; :name 'voice-proc
+                  ;This lambda is our function
+                  (lambda :behavior process ((filename string))
+                    (suspend-for (seconds 1.0)) ;; pause for a bit
+                    (stop-all-sounds)
+                    (play-sound-file filename (the int (-> *setting-control* default dialog-volume)))
+                    )
+                  filename
+                  )
                 )
               )
-            )
-          ;; advance idx
-          (+! *outrag-event-idx* 1)
-          (case *outrag-event-idx*
-            ((0 1)
-              (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
-              )
-            (((- *outrag-event-max* 1))
-              ;; sum up remaining times for last section
-              (let ((sum 0))
-                (dotimes (i (- *outrag-event-max* 1))
-                  (+! sum (-> *outrag-sdc-times* i)))
-                ;; (format 0 "last event summed time ~D ~D~%" *outrag-event-idx* sum)
-                (set! *outrag-section-remaining-time* sum)
+            ;; advance idx
+            (+! *outrag-event-idx* 1)
+            (case *outrag-event-idx*
+              ((0 1)
+                (set! *outrag-section-remaining-time* (-> *outrag-events* 2 sdc-time))
                 )
-              )
-            ((10)
-              (set! *outrag-section-remaining-time* (-> *outrag-events* 11 sdc-time))
-              )
-            ((11 12 13)
-              ;; dont reset timer here / out of bounds
-              )
-            (else
-              (format 0 "event common time ~D~%" *outrag-event-idx*)
-              (set! *outrag-section-remaining-time* (-> *outrag-events* *outrag-event-idx* sdc-time))
+              (((- *outrag-event-max* 1))
+                ;; sum up remaining times for last section
+                (let ((sum 0))
+                  (dotimes (i 9)
+                    (+! sum (-> *outrag-sdc-times* i)))
+                  ;; (format 0 "last event summed time ~D ~D~%" *outrag-event-idx* sum)
+                  (set! (-> *outrag-conn-times* 9) sum)
+                  (set! *outrag-section-remaining-time* sum)
+                  )
+                )
+              ((10)
+                (set! *outrag-section-remaining-time* (-> *outrag-events* 11 sdc-time))
+                )
+              ((11 12 13)
+                ;; dont reset timer here / out of bounds
+                )
+              (else
+                ;; (format 0 "event common time ~D~%" *outrag-event-idx*)
+                (set! *outrag-section-remaining-time* (-> *outrag-events* *outrag-event-idx* sdc-time))
+                )
               )
             )
           )
@@ -607,32 +708,14 @@
           (-! *outrag-section-remaining-time* (/ TICKS_PER_SECOND 60))
           )
         (when (and (player-is-playing?) (< *outrag-event-idx* *outrag-event-max*))
-          (let* ((y 215)
-                ;; (section-time (case *outrag-event-idx*
-                ;;     ((0 1) (-> *outrag-events* 2 sdc-time))
-                ;;     (((- *outrag-event-max* 1)) 
-                ;;       ;; sum up remaining times
-                ;;       (let ((sum 0))
-                ;;         (dotimes (i (- *outrag-event-max* 2))
-                ;;           (+! sum (- (-> *outrag-events* i sdc-time) (-> *outrag-sdc-times* i))))
-                ;;         sum
-                ;;         )
-                ;;       )
-                ;;     (else (-> e sdc-time))
-                ;;     ))
-                ;; (time-elapsed (if *outrag-section-started?* (- (real-current-time) *outrag-section-remaining-time*) 0))
-                (time-remaining *outrag-section-remaining-time*)
-                (timer-full-sec (/ time-remaining TICKS_PER_SECOND))
-                (timer-min (/ timer-full-sec 60))
-                (timer-sec (- timer-full-sec (* timer-min 60)))
-                )
+          (let* ((y 215))
             ;; draw section info to bottom left
             (clear *next-section-str*)
             
             ;; SDC checks
             (when (and *mod-hard-mode?* (nonzero? *outrag-event-idx*))
               ;; check if player has failed this section (SDC)
-              (when (and (< time-remaining 0) ;; time is up
+              (when (and (< *outrag-section-remaining-time* 0) ;; time is up
                         *outrag-section-started?* ;; section has started
                         (< (-> *game-info* money) (-> e orb-count)) ;; player has not met orb req (for case when headed back to geyser)
                         (not (process-by-name 'sdc-fail-proc *active-pool*))) ;; not already failing player
@@ -657,11 +740,8 @@
                 )
 
               ;; (when (not *outrag-section-finished?*)
-                (if (> time-remaining 0)
-                  (if (>= timer-sec 10) ;; too lazy to figure out zero padding for floats
-                    (format *next-section-str* "TIME REMAINING: ~D:~D~%" timer-min timer-sec)
-                    (format *next-section-str* "TIME REMAINING: ~D:0~D~%" timer-min timer-sec)
-                    )
+                (if (> *outrag-section-remaining-time* 0)
+                  (format *next-section-str* "TIME REMAINING: ~S~%" (get-min-sec-text *outrag-section-remaining-time*))
                   (format *next-section-str* "~3LTIME\c12S UP! YOU FAILED~0L~%")
                   )
                 (-! y 8)
@@ -678,10 +758,10 @@
             (case *outrag-event-idx*
               ((0 1)
                 (format *next-section-str* "Connection ~D Goal: ~D Orbs" 1 169))
-              ((11 12)
-                (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 2) (-> e orb-count)))
+              ;; ((11 12)
+              ;;   (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 2) (-> e orb-count)))
               (else
-                (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 1) (-> e orb-count)))
+                (format *next-section-str* "Connection ~D Goal: ~D Orbs" (+ (-> e conn-id) 1) (-> e orb-count)))
               )
             (draw-string-xy *next-section-str* buf 4 y (font-color white) (font-flags shadow kerning))
             )
@@ -816,7 +896,7 @@
     (cond
       ((and *mod-hard-mode?* *mod-lightning?*
             (case (-> lvl name) :comp name=
-              (('maincave 'robocave 'darkcave 'lavatube 'citadel 'finalboss) #f) ;; no lightning effect
+              (('jungleb 'maincave 'robocave 'darkcave 'lavatube 'citadel 'finalboss) #f) ;; no lightning effect
               (else #t)
               )
             )
@@ -998,8 +1078,10 @@
 
   ;; check if player is near geyser vent and wants a hint
   (when (and *target* (or (in-bubble-m? -1311.39   6.77 1056.64  5.0) (in-bubble-m? -1418.61   3.81 1010.54  5.0))
+             (not (logtest? (-> *target* state-flags) (state-flags being-attacked dying)))
              (>= *outrag-event-idx* 2) ;; only after geyser sections
              (not (is-sound-playing "")) ;; wait for any sounds to finish
+             (not (paused?))
              )
     ;; try to show prompt
     (kill-current-level-hint '() '(sidekick voicebox ambient) 'exit)
