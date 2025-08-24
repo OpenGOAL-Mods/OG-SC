@@ -40,7 +40,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-hp-speed-effect?* #t)
 (define *mod-vent-checkpoint?* #t)
 (define *mod-hard-mode?* #f)
-(define *mod-lightning?* #t)
+(define *mod-lightning?* #f)
 (define *mod-fog?* #t)
 (define *mod-stars?* #t)
 
