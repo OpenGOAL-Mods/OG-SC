@@ -154,6 +154,7 @@
 
 (define-extern *mod-hard-mode?* symbol)
 (define-extern level-loaded? (function symbol symbol))
+(define-extern outrag-death-reset-counter (function none))
 (defmethod initialize! ((this game-info) (cause symbol) (save-to-load game-save) (continue-point-override string))
   "Initialize the game-info.
     The cause can be 'dead if you die, or 'game to reset everything.
@@ -166,15 +167,16 @@
      (+! (-> this total-deaths) 1)
      (+! (-> this continue-deaths) 1)
      (+! (-> this fuel-cell-deaths) 1)
-     (when *target*
-       (let ((lev-info (-> *target* current-level info)))
-         (set! v0-0
-               (when (>= (-> *level-task-data-remap* length) (-> lev-info index))
-                 ;; update death per level.
-                 (set! v0-0
-                       (seekl (the-as int (-> this deaths-per-level (-> *level-task-data-remap* (+ (-> lev-info index) -1)))) 255 1))
-                 (set! (-> this deaths-per-level (-> *level-task-data-remap* (+ (-> lev-info index) -1))) (the-as uint v0-0))
-                 v0-0))))
+     ;; mod change - reuse deaths per level for deaths per conn
+    ;;  (when *target*
+    ;;    (let ((lev-info (-> *target* current-level info)))
+    ;;      (set! v0-0
+    ;;            (when (>= (-> *level-task-data-remap* length) (-> lev-info index))
+    ;;              ;; update death per level.
+    ;;              (set! v0-0
+    ;;                    (seekl (the-as int (-> this deaths-per-level (-> *level-task-data-remap* (+ (-> lev-info index) -1)))) 255 1))
+    ;;              (set! (-> this deaths-per-level (-> *level-task-data-remap* (+ (-> lev-info index) -1))) (the-as uint v0-0))
+    ;;              v0-0))))
      (case (-> this mode)
        (('play)
         ;; now pick between life/try depending on if we ran out of lives or not. (this isnt really used)
@@ -264,6 +266,8 @@
            (set-continue! *game-info* arg2)
            (when arg3
              (load-game! *game-info* arg3)
+             ;; mod change - if we loaded for some reason, we count that as death/reset (for this conn, if valid)
+             (outrag-death-reset-counter)
              ;; mod change - hack to reset SDC files if loaded from title screen, to avoid cheesing timer
              (when (and *mod-hard-mode?* (level-loaded? 'title))
               (initialize! *game-info* 'game (the-as game-save #f) "game-start")

@@ -304,7 +304,7 @@
 (define-extern *outrag-section-started?* symbol)
 (define-extern *outrag-section-remaining-time* time-frame)
 (defconstant *outrag-event-max* 13)
-(define *outrag-sdc-times* (new 'global 'array 'time-frame *outrag-event-max*))
+(define *outrag-sdc-times* (new 'global 'array 'time-frame 10))
 (defmethod save-game! ((this game-info) (arg0 game-save) (arg1 string))
   "Update the game-save to have the info from the current game state"
   ;; some stuff lives in the levels and needs to be copied into game-info.
@@ -747,7 +747,7 @@
                    (the-as time-frame (-> (the-as (pointer uint64) (&+ (&+ (the-as pointer data) 16) (* a0-126 8)))))))))
         (((game-save-elt in-level-time)) ;; mod change - we're hacking in-level-time to track time used per section for SDC
          (let ((v1-87 (min 32 (-> data elt-count))))
-           (dotimes (a0-130 *outrag-event-max*) ;;  v1-87)
+           (dotimes (a0-130 10) ;;  v1-87)
              (set! (-> *outrag-sdc-times* a0-130) ;; (-> this in-level-time a0-130)
                    (the-as time-frame (-> (the-as (pointer uint64) (&+ (&+ (the-as pointer data) 16) (* a0-130 8)))))))))
         (((game-save-elt fuel-cell-time))
