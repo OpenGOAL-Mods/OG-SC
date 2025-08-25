@@ -155,6 +155,8 @@
 (define-extern *mod-hard-mode?* symbol)
 (define-extern level-loaded? (function symbol symbol))
 (define-extern outrag-death-reset-counter (function none))
+(define-extern orb-placer-autoload-clear! (function none))
+(define-extern *next-unlock-req* float)
 (defmethod initialize! ((this game-info) (cause symbol) (save-to-load game-save) (continue-point-override string))
   "Initialize the game-info.
     The cause can be 'dead if you die, or 'game to reset everything.
@@ -263,6 +265,8 @@
          (lambda ((arg0 symbol) (arg1 symbol) (arg2 continue-point) (arg3 game-save))
            (stop arg0)
            (reset-actors arg1)
+           (orb-placer-autoload-clear!)
+           (set! *next-unlock-req* 0.0)
            (set-continue! *game-info* arg2)
            (when arg3
              (load-game! *game-info* arg3)

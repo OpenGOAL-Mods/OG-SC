@@ -662,7 +662,6 @@
   (set! *orb-placer-selected-idx* -1)
   (set! *entity-placer-edit-mode?* #f)
   (none)
-  0
   )
 
 ;; file save/load stuff
@@ -843,6 +842,18 @@
 (defun orbs-set-lvl-14 () (set! *orb-placer-selected-level-idx* 13) (set! *orb-placer-selected-idx* -1) (orb-placer-list-maintenance #t))
 (defun orbs-set-lvl-15 () (set! *orb-placer-selected-level-idx* 14) (set! *orb-placer-selected-idx* -1) (orb-placer-list-maintenance #t))
 (defun orbs-set-lvl-16 () (set! *orb-placer-selected-level-idx* 15) (set! *orb-placer-selected-idx* -1) (orb-placer-list-maintenance #t))
+
+(defun orb-placer-autoload-clear! ()
+  ;; unload objs for any level we dont have loaded
+  (dotimes (i 16)
+    (when (-> *orb-placer-lvl-loaded?* i) ;; i is loaded
+      (set! *orb-placer-selected-level-idx* i)
+      (orb-placer-clear!)
+      (false! (-> *orb-placer-lvl-loaded?* i))
+      )
+    )
+  (none)
+  )
 
 (defun orb-placer-autoload-maintenance ()
   ;; unload objs for any level we dont have loaded
