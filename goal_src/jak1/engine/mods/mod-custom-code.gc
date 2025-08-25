@@ -648,7 +648,7 @@
             (let ((filename (if *mod-hard-mode?* (-> e filename-sdc) (-> e filename))))
               (when (and filename (nonzero? filename))
                 (process-spawn-function process
-                  ;; :name 'voice-proc
+                  :name 'voice-proc
                   ;This lambda is our function
                   (lambda :behavior process ((filename string))
                     (suspend-for (seconds 1.0)) ;; pause for a bit
@@ -1082,6 +1082,7 @@
              (>= *outrag-event-idx* 2) ;; only after geyser sections
              (not (is-sound-playing "")) ;; wait for any sounds to finish
              (not (paused?))
+             (not (process-by-name 'voice-proc *active-pool*)) ;; voice line isnt pending/playing
              )
     ;; try to show prompt
     (kill-current-level-hint '() '(sidekick voicebox ambient) 'exit)
