@@ -705,6 +705,7 @@
   (none)
   )
 
+(define *last-reset-time* (the time-frame #f))
 (defun speedrun-mode-update ()
   "A per frame update for speedrunning related stuff"
   ;; if we're stuck continue-ing at a speedrun checkpoint, it might have bad vis so force it
@@ -724,13 +725,21 @@
     )
 
   (when (and (not *progress-process*)
-             (or (cpad-hold? 0 l2) (cpad-pressed? 0 l2)))
+             (or (cpad-hold? 0 l2) (cpad-pressed? 0 l2))
+             *target*
+             (!= (-> *target* state name) 'target-grab)
+             (!= (-> *target* state name) 'target-continue)
+             (not (logtest? (-> *target* state-flags) (state-flags dying)))
+             (>= (- (-> *display* base-frame-counter) (-> *game-info* blackout-time)) (seconds 0.1)))
     (cond
-      ((and (>= (-> *game-info* auto-save-which) 0) ;; make sure we have autosave slot set
+      ((and (or (not *last-reset-time*) (g-time-elapsed? *last-reset-time* (seconds 2)))
+            (>= (-> *game-info* auto-save-which) 0) ;; make sure we have autosave slot set
             (cpad-pressed? 0 up)) ;; Check for fast reset combo
+        (set-g-time! *last-reset-time*)
         (format #t "player triggered reset combo ~D~%" (-> *game-info* auto-save-which))
         (false! *full-blue?*)
         ;; (speedrun-practice-spawn)
+        (set-blackout-frames (seconds 0.5))
         (auto-save-command 'restore 0 (-> *game-info* auto-save-which) *target*)
         )
       ((and *debug-segment* ;; can only reset with full eco in debug mode

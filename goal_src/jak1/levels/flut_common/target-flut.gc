@@ -1117,7 +1117,8 @@
                (when (not (ja-group? eichar-flut-hit-back-ja))
                  (ja-channel-push! 1 (seconds 0.075))
                  (ja :group! eichar-flut-hit-back-ja :num! min))))
-            (target-hit-move gp-0 (target-hit-orient gp-0 s5-0) target-flut-falling-anim-trans f30-0)))
+            (when (< 0.0 (-> self fact health)) ;; mod change - only bounce on flut while you're not dead
+              (target-hit-move gp-0 (target-hit-orient gp-0 s5-0) target-flut-falling-anim-trans f30-0))))
         (if (and (= (-> self game mode) 'play) (>= 0.0 (-> self fact health))) (go target-flut-death (-> gp-0 mode))))
       (go target-flut-hit-ground))
   :post target-flut-post)
