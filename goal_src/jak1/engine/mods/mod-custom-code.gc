@@ -74,8 +74,8 @@
       50.0
       169.0
       358.0
-      525.0
-      676.0
+      531.0
+      682.0
       853.0
       1106.0
       1401.0
@@ -164,7 +164,7 @@
       :conn-id 1
       )
     (new 'static 'outrag-event
-      :orb-count 525
+      :orb-count 531
       :filename "outrag-510.mp3"
       :filename-sdc "outrag-510-SDC.mp3"
       :geyser-play? #t
@@ -174,7 +174,7 @@
         21  ;; (village1 1)
         13  ;; (beach 2)
         0   ;; (jungle 3)
-        55  ;; (misty 4)
+        61  ;; (misty 4)
         0   ;; (firecanyon 5)
         47  ;; (village2 6)
         0   ;; (sunken 7)
@@ -190,7 +190,7 @@
       :conn-id 2
       )
     (new 'static 'outrag-event
-      :orb-count 676
+      :orb-count 682
       :filename "outrag-639.mp3"
       :filename-sdc "outrag-639-SDC.mp3"
       :geyser-play? #t
@@ -200,7 +200,7 @@
         21  ;; (village1 1)
         67  ;; (beach 2)
         0   ;; (jungle 3)
-        55  ;; (misty 4)
+        61  ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         57  ;; (sunken 7)
