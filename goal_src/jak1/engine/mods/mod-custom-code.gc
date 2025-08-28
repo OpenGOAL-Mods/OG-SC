@@ -402,8 +402,8 @@
 (define *outrag-conn-counts* (new 'static 'array int 10
     169
     358
-    525
-    676
+    567
+    718
     853
     1106
     1401
@@ -416,9 +416,9 @@
 (define *outrag-conn-times* (new 'static 'array time-frame 10
     (seconds 780);; 169
     (seconds 1020);; 358
-    (seconds 1260);; 525
-    (seconds 960);; 676
-    (seconds 1260);; 853
+    (seconds 1440);; 567
+    (seconds 960);; 718
+    (seconds 1020);; 853
     (seconds 1440);; 1106
     (seconds 2160);; 1401
     (seconds 1920);; 1586
