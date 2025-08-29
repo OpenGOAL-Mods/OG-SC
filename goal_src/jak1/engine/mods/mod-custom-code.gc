@@ -75,8 +75,8 @@
       169.0
       358.0
       567.0
-      738.0
-      873.0
+      739.0
+      874.0
       1126.0
       1421.0
       1586.0
@@ -190,7 +190,7 @@
       :conn-id 2
       )
     (new 'static 'outrag-event
-      :orb-count 738
+      :orb-count 739
       :filename "outrag-639.mp3"
       :filename-sdc "outrag-639-SDC.mp3"
       :geyser-play? #t
@@ -198,7 +198,7 @@
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         21  ;; (village1 1)
-        67  ;; (beach 2)
+        68  ;; (beach 2)
         0   ;; (jungle 3)
         97  ;; (misty 4)
         0   ;; (firecanyon 5)
@@ -216,7 +216,7 @@
       :conn-id 3
       )
     (new 'static 'outrag-event
-      :orb-count 873
+      :orb-count 874
       :filename "outrag-758.mp3"
       :filename-sdc "outrag-758-SDC.mp3"
       :geyser-play? #t
@@ -224,7 +224,7 @@
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         21  ;; (village1 1)
-        67  ;; (beach 2)
+        68  ;; (beach 2)
         0   ;; (jungle 3)
         97  ;; (misty 4)
         0   ;; (firecanyon 5)
@@ -403,8 +403,8 @@
     169
     358
     567
-    738
-    873
+    739
+    874
     1126
     1421
     1586
@@ -417,8 +417,8 @@
     (seconds 780);; 169
     (seconds 1020);; 358
     (seconds 1440);; 567
-    (seconds 1080);; 738
-    (seconds 1020);; 873
+    (seconds 1080);; 739
+    (seconds 1020);; 874
     (seconds 1440);; 1126
     (seconds 2160);; 1421
     (seconds 1800);; 1586
@@ -430,7 +430,8 @@
 (defun outrag-death-reset-counter ()
   (+! (-> *game-info* total-deaths) 1)
   (when (< *outrag-event-idx* *outrag-event-max*)
-    (+! (-> *game-info* deaths-per-level (-> *outrag-events* *outrag-event-idx* conn-id)) 1))
+    ;; (format 0 " +++++++++ DEATH/RESET increase for connection ~D ~%" (+ (-> *outrag-events* *outrag-event-idx* conn-id) 1))
+    (+! (-> *game-info* deaths-per-conn (-> *outrag-events* *outrag-event-idx* conn-id)) 1))
   (none)
   )
 
@@ -457,7 +458,7 @@
     ((= want-idx (-> *outrag-events* *outrag-event-idx* conn-id))
       ;; this is the active connection
       (format (clear *conn-text*) "<  ~3LCONNECTION ~D~%~12L~D / ~D ORBS" (+ want-idx 1) (the int (-> *game-info* money)) (-> *outrag-conn-counts* want-idx))
-      (format *conn-text* "~%~D DEATHS / RESETS" (-> *game-info* deaths-per-level want-idx))
+      (format *conn-text* "~%~D DEATHS / RESETS" (-> *game-info* deaths-per-conn want-idx))
       (when *mod-hard-mode?*
         (format *conn-text* "~%TIME REMAINING: ~S /" (get-min-sec-text *outrag-section-remaining-time*))
         (format *conn-text* " ~S" (get-min-sec-text (-> *outrag-conn-times* want-idx))))
@@ -465,7 +466,7 @@
     (else
       ;; this is a completed connection
       (format (clear *conn-text*) "<  ~6LCONNECTION ~D~%~32L~D / ~D ORBS" (+ want-idx 1) (-> *outrag-conn-counts* want-idx) (-> *outrag-conn-counts* want-idx))
-      (format *conn-text* "~%~D DEATHS / RESETS" (-> *game-info* deaths-per-level want-idx))
+      (format *conn-text* "~%~D DEATHS / RESETS" (-> *game-info* deaths-per-conn want-idx))
       (when *mod-hard-mode?*
         (format *conn-text* "~%TIME REMAINING: ~S /" (get-min-sec-text (-> *outrag-sdc-times* want-idx)))
         (format *conn-text* " ~S" (get-min-sec-text (-> *outrag-conn-times* want-idx))))
@@ -1070,6 +1071,7 @@
   ;; check if player should be dead but isn't
   (when (and *target* 
              (!= (-> *target* state name) 'target-grab)
+             (!= (-> *target* state name) 'target-hit)
              (not (logtest? (-> *target* state-flags) (state-flags being-attacked dying)))
              (<= (-> *target* fact health) 0.0))
     ;; (format 0 "killing player backup~%")
