@@ -364,7 +364,7 @@
       ;; shift orb's position with camera angle, by 3m
       (vector+! vec vec (vector-normalize! camera-z-vector (meters 3.0)))
       ;; spawn and update orb-placer data
-      (let ((orb-handle (spawn-obj 'ventblue vec 0.0)))
+      (let ((orb-handle (spawn-obj 'ventblue vec 0.0 0.0)))
         (when (nonzero? orb-handle)
           (set! (-> *orb-placer-orbs* *orb-placer-selected-level-idx* (-> *orb-placer-count* *orb-placer-selected-level-idx*)) orb-handle)
           (set! *orb-placer-selected-idx* (-> *orb-placer-count* *orb-placer-selected-level-idx*))
@@ -375,10 +375,18 @@
           (orb-placer-list-maintenance #t)))))
   (none))
 
-(defun orb-placer-get-orb-req ((proc process-drawable))
+(defun orb-placer-get-spawn-orb-req ((proc process-drawable))
   (case (-> proc type symbol) :comp name=
-    (('eco-green 'eco-blue 'eco-red 'eco-yellow) (-> (the eco proc) orb-req))
-    (('ventgreen 'ventblue 'ventred 'ventyellow) (-> (the vent proc) orb-req))
+    (('eco-green 'eco-blue 'eco-red 'eco-yellow) (-> (the eco proc) spawn-orb-req))
+    (('ventgreen 'ventblue 'ventred 'ventyellow) (-> (the vent proc) spawn-orb-req))
+    (else 0.0)
+    )
+  )
+
+(defun orb-placer-get-despawn-orb-req ((proc process-drawable))
+  (case (-> proc type symbol) :comp name=
+    (('eco-green 'eco-blue 'eco-red 'eco-yellow) (-> (the eco proc) despawn-orb-req))
+    (('ventgreen 'ventblue 'ventred 'ventyellow) (-> (the vent proc) despawn-orb-req))
     (else 0.0)
     )
   )
@@ -389,7 +397,7 @@
     (let ((orb-handle (-> *orb-placer-orbs* *orb-placer-selected-level-idx* *orb-placer-selected-idx*)))
       (when (and (nonzero? orb-handle) (handle->process orb-handle))
         (let* ((obj (the process-drawable (handle->process orb-handle)))
-               (obj2-handle (spawn-obj (-> obj type symbol) (-> obj root trans) (orb-placer-get-orb-req obj))))
+               (obj2-handle (spawn-obj (-> obj type symbol) (-> obj root trans) (orb-placer-get-spawn-orb-req obj) (orb-placer-get-despawn-orb-req obj))))
           (when (nonzero? obj2-handle)
             (set! (-> *orb-placer-orbs* *orb-placer-selected-level-idx* (-> *orb-placer-count* *orb-placer-selected-level-idx*)) obj2-handle)
             (set! *orb-placer-selected-idx* (-> *orb-placer-count* *orb-placer-selected-level-idx*))
@@ -410,18 +418,18 @@
 (defun add-orb-req ((proc process-drawable) (amount float))
   (case (-> proc type symbol) :comp name=
     (('eco-green 'eco-blue 'eco-red 'eco-yellow)
-      (+! (-> (the eco proc) orb-req) amount)
-      (when (< (-> (the eco proc) orb-req) 0.0)
-        (set! (-> (the eco proc) orb-req) 0.0)) ;; clamp to 0
-      (when (> (-> (the eco proc) orb-req) 2000.0)
-        (set! (-> (the eco proc) orb-req) 2000.0)) ;; clamp to 2000)
+      (+! (-> (the eco proc) spawn-orb-req) amount)
+      (when (< (-> (the eco proc) spawn-orb-req) 0.0)
+        (set! (-> (the eco proc) spawn-orb-req) 0.0)) ;; clamp to 0
+      (when (> (-> (the eco proc) spawn-orb-req) 2000.0)
+        (set! (-> (the eco proc) spawn-orb-req) 2000.0)) ;; clamp to 2000)
       )
     (('ventgreen 'ventblue 'ventred 'ventyellow)
-      (+! (-> (the vent proc) orb-req) amount)
-      (when (< (-> (the vent proc) orb-req) 0.0)
-        (set! (-> (the vent proc) orb-req) 0.0)) ;; clamp to 0
-      (when (> (-> (the vent proc) orb-req) 2000.0)
-        (set! (-> (the vent proc) orb-req) 2000.0)) ;; clamp to 2000)
+      (+! (-> (the vent proc) spawn-orb-req) amount)
+      (when (< (-> (the vent proc) spawn-orb-req) 0.0)
+        (set! (-> (the vent proc) spawn-orb-req) 0.0)) ;; clamp to 0
+      (when (> (-> (the vent proc) spawn-orb-req) 2000.0)
+        (set! (-> (the vent proc) spawn-orb-req) 2000.0)) ;; clamp to 2000)
       )
     (else 0.0)
     )
@@ -435,7 +443,7 @@
       (let ((orb-handle (-> *orb-placer-orbs* *orb-placer-selected-level-idx* i)))
         (when (and (nonzero? orb-handle) (handle->process orb-handle))
           (let ((orb (the process-drawable (handle->process orb-handle))))
-            (format 0 " ~A (~D) ~m, ~m, ~m (~D)~%" (-> orb type symbol) (orb-placer-get-orb-req orb) (-> orb root trans x) (-> orb root trans y) (-> orb root trans z))))))
+            (format 0 " ~A (~D) ~m, ~m, ~m (~D)~%" (-> orb type symbol) (orb-placer-get-spawn-orb-req orb) (orb-placer-get-despawn-orb-req orb) (-> orb root trans x) (-> orb root trans y) (-> orb root trans z))))))
     (format 0 "|-------------~S end-------------|~%" (-> *orb-placer-lvl-names* j))
     )
   (none))
@@ -457,7 +465,7 @@
   (when (and (>= *orb-placer-selected-idx* 0) (nonzero? (-> *orb-placer-orbs* *orb-placer-selected-level-idx* *orb-placer-selected-idx*)))
     (let* ((obj (the process-drawable (handle->process (-> *orb-placer-orbs* *orb-placer-selected-level-idx* *orb-placer-selected-idx*))))
            (next-type (orb-placer-get-next-type (-> obj type symbol)))
-           (obj2-handle (spawn-obj next-type (-> obj root trans) (orb-placer-get-orb-req obj))))
+           (obj2-handle (spawn-obj next-type (-> obj root trans) (orb-placer-get-spawn-orb-req obj) (orb-placer-get-despawn-orb-req obj))))
       (when (nonzero? obj2-handle)
         (deactivate obj)
         (set! (-> *orb-placer-orbs* *orb-placer-selected-level-idx* *orb-placer-selected-idx*) obj2-handle)
@@ -470,7 +478,7 @@
 
 ;; called from run-every-frame to ensure orb-placer is spawned/killed
 (define *orb-offset-tmp-vec* (new 'global 'vector))
-(define *orb-placer-hud-str* (new 'global 'string 128 (the string #f)))
+(define *orb-placer-hud-str* (new 'global 'string 1024 (the string #f)))
 (define *square-hold-time* (the time-frame #f))
 (define *circle-hold-time* (the time-frame #f))
 (define-extern orb-placer-autoload-maintenance (function none))
@@ -496,7 +504,9 @@
         (when (> *orb-placer-selected-idx* -1)
           (let ((orb (the process-drawable (handle->process (-> *orb-placer-orbs* *orb-placer-selected-level-idx* *orb-placer-selected-idx*)))))
             (when orb
-              (format *orb-placer-hud-str* "~2L(SQUARE- / CIRCLE+) ~0LOrb Requirement: ~D~%" (the int (orb-placer-get-orb-req orb)))
+              (format *orb-placer-hud-str* "~2L(SQUARE- / CIRCLE+) ~0LSpawn Orb Count: ~D~%" (the int (orb-placer-get-spawn-orb-req orb)))
+              (when (nonzero? (orb-placer-get-despawn-orb-req orb))
+                (format *orb-placer-hud-str* "~0LDespawn Orb Count: ~D~%" (the int (orb-placer-get-despawn-orb-req orb))))
               (format *orb-placer-hud-str* "~2L(X) ~0LType: ~S~%" (-> orb type symbol))
               )
             )
@@ -667,19 +677,21 @@
 ;; file save/load stuff
 
 (defun orbs-handle-input-settings ((file file-stream))
-  ;; Parses an orb line in the file, expecting the format: (orb-idx x y z bob-scale type)
+  ;; Parses an orb line in the file, expecting the format: (orb-idx x y z bob-scale type spawn-req despawn-req)
   (let* ((orb-idx (string->int *pc-temp-string*))
          (ptype (file-stream-read-symbol file))
          (x (file-stream-read-float file))
          (y (file-stream-read-float file))
          (z (file-stream-read-float file))
          (v (new-stack-vector0))
-         (orb-req (file-stream-read-float file))
+         (spawn-orb-req (file-stream-read-float file))
+         (next-char (file-stream-get-next-char-ret file))
+         (despawn-orb-req (if (or (= #x28 next-char) (= #x29 next-char)) 0.0 (file-stream-read-float file))) ;; try to read despawn req, but if its not there just use 0.0
          )
     (set! (-> *orb-placer-count* *orb-placer-selected-level-idx*) (max (-> *orb-placer-count* *orb-placer-selected-level-idx*) (+ orb-idx 1)))
     ;; (dbg-format 0 "load spawn-ventblue from file, total count is now ~D~%" (-> *orb-placer-count* *orb-placer-selected-level-idx*))
     (set-vector-meters! v x y z)
-    (let ((orb-handle (spawn-obj ptype v orb-req))) ;; just pass type/amount=1.0 here and we set the type after its spawned
+    (let ((orb-handle (spawn-obj ptype v spawn-orb-req despawn-orb-req))) ;; just pass type/amount=1.0 here and we set the type after its spawned
       (when (nonzero? orb-handle)
         (set! (-> *orb-placer-orbs* *orb-placer-selected-level-idx* orb-idx) orb-handle)
         )
@@ -721,9 +733,12 @@
       ((and (-> *orb-placer-orbs* *orb-placer-selected-level-idx* idx) (nonzero? (-> *orb-placer-orbs* *orb-placer-selected-level-idx* idx)) (handle->process (-> *orb-placer-orbs* *orb-placer-selected-level-idx* idx)))
         (let* ((orb (the process-drawable (handle->process (-> *orb-placer-orbs* *orb-placer-selected-level-idx* idx))))
                (v (-> orb root trans)) ;; (-> orb base))
-               (orb-req (orb-placer-get-orb-req orb))
+               (spawn-orb-req (orb-placer-get-spawn-orb-req orb))
+               (despawn-orb-req (orb-placer-get-despawn-orb-req orb))
                )
-          (format file "  (~D ~S ~m ~m ~m ~F)~%" idx (-> orb type symbol) (-> v x) (-> v y) (-> v z) orb-req)
+          ;; break across 2 calls because of 8 arg limit lol
+          (format file "  (~D ~S ~m ~m ~m" idx (-> orb type symbol) (-> v x) (-> v y) (-> v z))
+          (format file " ~F ~F)~%" spawn-orb-req despawn-orb-req)
           )
         )
       (else

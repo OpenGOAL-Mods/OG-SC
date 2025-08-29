@@ -39,14 +39,6 @@
 (define *next-unlock-req* -1.0)
 (define *next-section-str* (new 'global 'string 256 (the string #f)))
 
-(defun get-orb-req ((proc process-tree))
-  (case (-> proc type symbol) :comp name=
-    (('eco-green 'eco-blue 'eco-red 'eco-yellow) (-> (the eco proc) orb-req))
-    (('ventgreen 'ventblue 'ventred 'ventyellow) (-> (the vent proc) orb-req))
-    (else 0.0)
-    )
-  )
-
 (deftype outrag-event (structure)
   ((orb-count int)
    (filename string)
@@ -75,8 +67,8 @@
       169.0
       358.0
       567.0
-      739.0
-      874.0
+      743.0
+      878.0
       1126.0
       1421.0
       1586.0
@@ -190,7 +182,7 @@
       :conn-id 2
       )
     (new 'static 'outrag-event
-      :orb-count 739
+      :orb-count 743
       :filename "outrag-639.mp3"
       :filename-sdc "outrag-639-SDC.mp3"
       :geyser-play? #t
@@ -198,7 +190,7 @@
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         21  ;; (village1 1)
-        68  ;; (beach 2)
+        72  ;; (beach 2)
         0   ;; (jungle 3)
         97  ;; (misty 4)
         0   ;; (firecanyon 5)
@@ -216,7 +208,7 @@
       :conn-id 3
       )
     (new 'static 'outrag-event
-      :orb-count 874
+      :orb-count 878
       :filename "outrag-758.mp3"
       :filename-sdc "outrag-758-SDC.mp3"
       :geyser-play? #t
@@ -224,7 +216,7 @@
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         21  ;; (village1 1)
-        68  ;; (beach 2)
+        72  ;; (beach 2)
         0   ;; (jungle 3)
         97  ;; (misty 4)
         0   ;; (firecanyon 5)
@@ -403,8 +395,8 @@
     169
     358
     567
-    739
-    874
+    743
+    878
     1126
     1421
     1586
@@ -417,8 +409,8 @@
     (seconds 780);; 169
     (seconds 1020);; 358
     (seconds 1440);; 567
-    (seconds 1080);; 739
-    (seconds 1020);; 874
+    (seconds 1080);; 743
+    (seconds 1020);; 878
     (seconds 1440);; 1126
     (seconds 2160);; 1421
     (seconds 1800);; 1586
