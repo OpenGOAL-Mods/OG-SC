@@ -75,10 +75,10 @@
       169.0
       358.0
       567.0
-      718.0
-      853.0
-      1106.0
-      1401.0
+      738.0
+      873.0
+      1126.0
+      1421.0
       1586.0
       1637.0
       1980.0
@@ -190,7 +190,7 @@
       :conn-id 2
       )
     (new 'static 'outrag-event
-      :orb-count 718
+      :orb-count 738
       :filename "outrag-639.mp3"
       :filename-sdc "outrag-639-SDC.mp3"
       :geyser-play? #t
@@ -205,7 +205,7 @@
         50  ;; (village2 6)
         57  ;; (sunken 7)
         69  ;; (swamp 8)
-        82  ;; (rolling 9)
+        102 ;; (rolling 9)
         0   ;; (ogre 10)
         20  ;; (village3 11)
         66  ;; (snow 12)
@@ -216,7 +216,7 @@
       :conn-id 3
       )
     (new 'static 'outrag-event
-      :orb-count 853
+      :orb-count 873
       :filename "outrag-758.mp3"
       :filename-sdc "outrag-758-SDC.mp3"
       :geyser-play? #t
@@ -231,7 +231,7 @@
         50  ;; (village2 6)
         57  ;; (sunken 7)
         69  ;; (swamp 8)
-        82  ;; (rolling 9)
+        102 ;; (rolling 9)
         0   ;; (ogre 10)
         20  ;; (village3 11)
         66  ;; (snow 12)
@@ -242,7 +242,7 @@
       :conn-id 4
       )
     (new 'static 'outrag-event
-      :orb-count 1106
+      :orb-count 1126
       :filename "outrag-1041.mp3"
       :filename-sdc "outrag-1041-SDC.mp3"
       :geyser-play? #t
@@ -257,7 +257,7 @@
         50  ;; (village2 6)
         111 ;; (sunken 7)
         200 ;; (swamp 8)
-        82  ;; (rolling 9)
+        102 ;; (rolling 9)
         0   ;; (ogre 10)
         20  ;; (village3 11)
         66  ;; (snow 12)
@@ -268,7 +268,7 @@
       :conn-id 5
       )
     (new 'static 'outrag-event
-      :orb-count 1401
+      :orb-count 1421
       :filename "outrag-1336.mp3"
       :filename-sdc "outrag-1336-SDC.mp3"
       :geyser-play? #t
@@ -283,7 +283,7 @@
         50  ;; (village2 6)
         111 ;; (sunken 7)
         200 ;; (swamp 8)
-        82  ;; (rolling 9)
+        102 ;; (rolling 9)
         0   ;; (ogre 10)
         20  ;; (village3 11)
         186 ;; (snow 12)
@@ -403,10 +403,10 @@
     169
     358
     567
-    718
-    853
-    1106
-    1401
+    738
+    873
+    1126
+    1421
     1586
     1637
     2000
@@ -417,10 +417,10 @@
     (seconds 780);; 169
     (seconds 1020);; 358
     (seconds 1440);; 567
-    (seconds 960);; 718
-    (seconds 1020);; 853
-    (seconds 1440);; 1106
-    (seconds 2160);; 1401
+    (seconds 960);; 738
+    (seconds 1020);; 873
+    (seconds 1440);; 1126
+    (seconds 2160);; 1421
     (seconds 1920);; 1586
     (seconds 600);; 1637
     (seconds 0);; 2000
