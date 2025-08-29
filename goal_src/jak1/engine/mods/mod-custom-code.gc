@@ -194,7 +194,7 @@
       :filename "outrag-639.mp3"
       :filename-sdc "outrag-639-SDC.mp3"
       :geyser-play? #t
-      :sdc-time (seconds 960)
+      :sdc-time (seconds 1080)
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         21  ;; (village1 1)
@@ -298,7 +298,7 @@
       :filename "outrag-1580.mp3"
       :filename-sdc "outrag-1580-SDC.mp3"
       :geyser-play? #t
-      :sdc-time (seconds 1920)
+      :sdc-time (seconds 1800)
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
         50  ;; (village1 1)
@@ -417,11 +417,11 @@
     (seconds 780);; 169
     (seconds 1020);; 358
     (seconds 1440);; 567
-    (seconds 960);; 738
+    (seconds 1080);; 738
     (seconds 1020);; 873
     (seconds 1440);; 1126
     (seconds 2160);; 1421
-    (seconds 1920);; 1586
+    (seconds 1800);; 1586
     (seconds 600);; 1637
     (seconds 0);; 2000
     )
