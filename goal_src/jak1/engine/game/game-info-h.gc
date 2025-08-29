@@ -167,7 +167,9 @@
    (other-camera-handle   handle)
    (death-pos             vector-array)
    (dummy                 basic)
-   (auto-save-count       int32))
+   (auto-save-count       int32)
+   (deaths-per-conn       uint32 32) ;; added for mod
+   )
   (:methods
    (initialize! (_type_ symbol game-save string) _type_)
    (adjust (_type_ symbol float handle) float)

@@ -98,6 +98,7 @@
   (hard-mode-unlocked 511)
   (hard-mode 512)
   (sdc-section-start-time 513)
+  (deaths-per-conn 514)
   )
 
 ;; DECOMP BEGINS
@@ -222,6 +223,12 @@
                          "                 ~-32S: ~D~%"
                          lev-name
                          (-> (the-as (pointer uint8) (&+ (the-as pointer (&-> (the-as (pointer uint8) tag) 16)) prog-lev-idx))))))))
+          (((game-save-elt deaths-per-conn))
+           (dotimes (prog-lev-idx (-> tag elt-count))
+             (format #t
+                         "                 ~D: ~D~%"
+                         prog-lev-idx
+                         (-> (the-as (pointer uint32) (&+ (&+ (the-as pointer tag) 16) (* prog-lev-idx 4)))))))
           (((game-save-elt enter-level-time))
            (dotimes (s2-2 (-> tag elt-count))
              (let ((a2-14 (progress-level-index->string s2-2)))
@@ -617,7 +624,16 @@
                                                                                                                   (set! (-> a0-92 elt-type) (game-save-elt sdc-section-start-time))
                                                                                                                   (set! (-> a0-92 elt-count) 0)
                                                                                                                   (set! (-> a0-92 user-uint64) (the-as uint *outrag-section-remaining-time*)))
-                                                                                                            (set! (-> arg0 length) (&- (&+ v1-116 16) (the-as uint (the-as pointer (-> arg0 tag))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+                                                                                                                (let ((v1-117 (&+ v1-116 16)))
+                                                                                                                  (let ((a0-93 (the-as game-save-tag (&+ v1-117 0))))
+                                                                                                                    (set! (-> a0-93 elt-type) (game-save-elt deaths-per-conn))
+                                                                                                                    (set! (-> a0-93 elt-count) 32)
+                                                                                                                    (set! (-> a0-93 elt-size) (the-as uint 4)))
+                                                                                                                  (let ((v1-118 (&+ v1-117 16)))
+                                                                                                                    (dotimes (a0-94 32)
+                                                                                                                      ;; (format 0 " >>>>>> SAVING deaths-per-conn ~D: ~D~%" a0-94 (-> this deaths-per-conn a0-94))
+                                                                                                                      (set! (-> (the-as (pointer uint32) (&+ v1-118 (* a0-94 4)))) (-> this deaths-per-conn a0-94)))
+                                                                                                            (set! (-> arg0 length) (&- (&+ v1-118 128) (the-as uint (the-as pointer (-> arg0 tag))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
   (if (< (-> arg0 allocated-length) (-> arg0 length))
     (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
   (none))
@@ -740,6 +756,12 @@
          (let ((v1-79 (min 32 (-> data elt-count))))
            (dotimes (a0-122 v1-79)
              (set! (-> this deaths-per-level a0-122) (-> (the-as (pointer uint8) (&+ (the-as pointer data) 16)) a0-122)))))
+        (((game-save-elt deaths-per-conn))
+         (let ((v1-79 (min 32 (-> data elt-count))))
+           (dotimes (a0-122 v1-79)
+             (set! (-> this deaths-per-conn a0-122) (-> (the-as (pointer uint32) (&+ (&+ (the-as pointer data) 16) (* a0-122 4)))))
+            ;;  (format 0 " >>>>>> LOADING deaths-per-conn ~D: ~D~%" a0-122 (-> this deaths-per-conn a0-122))
+             )))
         (((game-save-elt enter-level-time))
          (let ((v1-83 (min 32 (-> data elt-count))))
            (dotimes (a0-126 v1-83)
@@ -1226,6 +1248,10 @@
 
 (defun auto-save-command ((arg0 symbol) (arg1 int) (arg2 int) (arg3 process-tree))
   (process-spawn auto-save arg0 arg3 arg1 arg2)
+  (none))
+
+(defun auto-save-command-default ()
+  (auto-save-command 'save 0 0 *default-pool*)
   (none))
 
 (defun auto-save-check ()

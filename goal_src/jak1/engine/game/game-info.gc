@@ -156,6 +156,7 @@
 (define-extern level-loaded? (function symbol symbol))
 (define-extern outrag-death-reset-counter (function none))
 (define-extern orb-placer-autoload-clear! (function none))
+(define-extern auto-save-command-default (function none))
 (define-extern *next-unlock-req* float)
 (defmethod initialize! ((this game-info) (cause symbol) (save-to-load game-save) (continue-point-override string))
   "Initialize the game-info.
@@ -166,19 +167,19 @@
   (case cause
     (('dead)
      ;; reload game-info because we died.  Increase death counts
-     (+! (-> this total-deaths) 1)
+    ;;  (+! (-> this total-deaths) 1)
+    (outrag-death-reset-counter)
      (+! (-> this continue-deaths) 1)
      (+! (-> this fuel-cell-deaths) 1)
-     ;; mod change - reuse deaths per level for deaths per conn
-    ;;  (when *target*
-    ;;    (let ((lev-info (-> *target* current-level info)))
-    ;;      (set! v0-0
-    ;;            (when (>= (-> *level-task-data-remap* length) (-> lev-info index))
-    ;;              ;; update death per level.
-    ;;              (set! v0-0
-    ;;                    (seekl (the-as int (-> this deaths-per-level (-> *level-task-data-remap* (+ (-> lev-info index) -1)))) 255 1))
-    ;;              (set! (-> this deaths-per-level (-> *level-task-data-remap* (+ (-> lev-info index) -1))) (the-as uint v0-0))
-    ;;              v0-0))))
+     (when *target*
+       (let ((lev-info (-> *target* current-level info)))
+         (set! v0-0
+               (when (>= (-> *level-task-data-remap* length) (-> lev-info index))
+                 ;; update death per level.
+                 (set! v0-0
+                       (seekl (the-as int (-> this deaths-per-level (-> *level-task-data-remap* (+ (-> lev-info index) -1)))) 255 1))
+                 (set! (-> this deaths-per-level (-> *level-task-data-remap* (+ (-> lev-info index) -1))) (the-as uint v0-0))
+                 v0-0))))
      (case (-> this mode)
        (('play)
         ;; now pick between life/try depending on if we ran out of lives or not. (this isnt really used)
@@ -228,6 +229,7 @@
        (set! (-> this enter-level-time v1-53) 0)
        (set! (-> this in-level-time v1-53) 0)
        (set! (-> this level-opened v1-53) (the-as uint 0))
+       (set! (-> this deaths-per-conn v1-53) (the-as uint 0))
        (nop!))))
   (case cause
     (('game 'try)
@@ -277,7 +279,9 @@
               (initialize! *game-info* 'game (the-as game-save #f) "game-start")
               (return 0)
               )
-             (set! arg2 (get-or-create-continue! *game-info*)))
+             (set! arg2 (get-or-create-continue! *game-info*))
+             (auto-save-command-default) ;; make sure the death counter increase is persisted
+             )
            (suspend)
            (start arg0 arg2)
            (none))
