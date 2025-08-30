@@ -750,11 +750,11 @@
               )
             (case *outrag-event-idx*
               ((0 1)
-                (format *next-section-str* "Connection ~D Goal: ~D / ~D Orbs" 1 (the int (-> *game-info* money)) 169))
+                (format *next-section-str* "Connection ~D: ~D / ~D Orbs" 1 (the int (-> *game-info* money)) 169))
               ;; ((11 12)
-              ;;   (format *next-section-str* "Connection ~D Goal: ~D Orbs" (- *outrag-event-idx* 2) (-> e orb-count)))
+              ;;   (format *next-section-str* "Connection ~D: ~D Orbs" (- *outrag-event-idx* 2) (-> e orb-count)))
               (else
-                (format *next-section-str* "Connection ~D Goal: ~D / ~D Orbs" (+ (-> e conn-id) 1) (the int (-> *game-info* money)) (-> e orb-count)))
+                (format *next-section-str* "Connection ~D: ~D / ~D Orbs" (+ (-> e conn-id) 1) (the int (-> *game-info* money)) (-> e orb-count)))
               )
             (draw-string-xy *next-section-str* buf 4 y (font-color white) (font-flags shadow kerning))
             )
