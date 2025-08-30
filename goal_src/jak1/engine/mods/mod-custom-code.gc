@@ -1006,6 +1006,8 @@
   (complete-entity-if-exists "robber-5")
   ;; ogre
   (complete-entity-if-exists "ogreboss-1")
+  ;; village3
+  (kill-entity-if-exists "crate-2987")
   ;; maincave
   (complete-entity-if-exists "gnawer-14")
   (complete-entity-if-exists "gnawer-19")
