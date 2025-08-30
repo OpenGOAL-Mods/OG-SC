@@ -791,35 +791,35 @@
           )
         )
 
-      (cond 
-        ((and (>= *next-unlock-req* 0) (<= *next-unlock-req* 2000))
-          ;; (let* ((p (ppointer->process *next-unlock-ptr*)))
-            (format (clear *next-unlock-str*) "Next Unlock in ")
-            ;; (format *next-unlock-str* (case (-> p type symbol)
-            ;;     (('eco-green)   "~6LGreen Eco Cluster~1L~%")
-            ;;     (('eco-blue)    "~7LBlue Eco Cluster~1L~%")
-            ;;     (('eco-red)     "~3LRed Eco Cluster~1L~%")
-            ;;     (('eco-yellow)  "~5LYellow Eco Cluster~1L~%")
-            ;;     (('ventgreen)   "~6LGreen Eco Vent~1L~%")
-            ;;     (('ventblue)    "~7LBlue Eco Vent~1L~%")
-            ;;     (('ventred)     "~3LRed Eco Vent~1L~%")
-            ;;     (('ventyellow)  "~5LYellow Eco Vent~1L~%")
-            ;;     )
-            ;;   )
-            (format *next-unlock-str* "~D Orb~S (~D/~D)"
-              (the int (- *next-unlock-req* (-> *game-info* money)))
-              (if (> (- *next-unlock-req* (-> *game-info* money)) 1) "s" "") ;; optional s :)
-              (the int (-> *game-info* money))
-              (the int *next-unlock-req*)
-              )
-            ;; )
-          (draw-string-xy *next-unlock-str* buf 508 215 (font-color white) (font-flags right shadow kerning))
-          )
-        (else
-          (format (clear *next-unlock-str*) "Next Unlock ~2LN/A")
-          (draw-string-xy *next-unlock-str* buf 508 215 (font-color white) (font-flags right shadow kerning))
-          )
-        )   
+      ;; (cond 
+      ;;   ((and (>= *next-unlock-req* 0) (<= *next-unlock-req* 2000))
+      ;;     ;; (let* ((p (ppointer->process *next-unlock-ptr*)))
+      ;;       (format (clear *next-unlock-str*) "Next Unlock in ")
+      ;;       ;; (format *next-unlock-str* (case (-> p type symbol)
+      ;;       ;;     (('eco-green)   "~6LGreen Eco Cluster~1L~%")
+      ;;       ;;     (('eco-blue)    "~7LBlue Eco Cluster~1L~%")
+      ;;       ;;     (('eco-red)     "~3LRed Eco Cluster~1L~%")
+      ;;       ;;     (('eco-yellow)  "~5LYellow Eco Cluster~1L~%")
+      ;;       ;;     (('ventgreen)   "~6LGreen Eco Vent~1L~%")
+      ;;       ;;     (('ventblue)    "~7LBlue Eco Vent~1L~%")
+      ;;       ;;     (('ventred)     "~3LRed Eco Vent~1L~%")
+      ;;       ;;     (('ventyellow)  "~5LYellow Eco Vent~1L~%")
+      ;;       ;;     )
+      ;;       ;;   )
+      ;;       (format *next-unlock-str* "~D Orb~S (~D/~D)"
+      ;;         (the int (- *next-unlock-req* (-> *game-info* money)))
+      ;;         (if (> (- *next-unlock-req* (-> *game-info* money)) 1) "s" "") ;; optional s :)
+      ;;         (the int (-> *game-info* money))
+      ;;         (the int *next-unlock-req*)
+      ;;         )
+      ;;       ;; )
+      ;;     (draw-string-xy *next-unlock-str* buf 508 215 (font-color white) (font-flags right shadow kerning))
+      ;;     )
+      ;;   (else
+      ;;     (format (clear *next-unlock-str*) "Next Unlock ~2LN/A")
+      ;;     (draw-string-xy *next-unlock-str* buf 508 215 (font-color white) (font-flags right shadow kerning))
+      ;;     )
+      ;;   )   
       )
     )
     (none)
@@ -1060,7 +1060,7 @@
 
   ;; (maybe) draw the info about section, next unlockable
   (draw-section-info)
-  ;; (draw-unlock-info) ;; kinda noisy, just folded into the connection display
+  (draw-unlock-info) ;; wont actually draw anymore
 
   ;; check if player should be dead but isn't
   (when (and *target* 
