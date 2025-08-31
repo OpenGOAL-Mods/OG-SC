@@ -430,11 +430,21 @@
 (define *ms-text* (new 'global 'string 128 (the string #f)))
 (defun get-min-sec-text ((t time-frame))
   (let* ((timer-full-sec (/ t TICKS_PER_SECOND))
-         (timer-min (/ timer-full-sec 60))
-         (timer-sec (- timer-full-sec (* timer-min 60))))
-    (if (>= timer-sec 10) ;; too lazy to figure out zero padding for floats
-      (format (clear *ms-text*) "~D:~D" timer-min timer-sec)
-      (format (clear *ms-text*) "~D:0~D" timer-min timer-sec)
+         (timer-full-min (/ timer-full-sec 60))
+         (timer-hour (/ timer-full-min 60))
+         (timer-min (- timer-full-min (* timer-hour 60)))
+         (timer-sec (- timer-full-sec (* timer-full-min 60))))
+    (if (> timer-hour 0)
+      (format (clear *ms-text*) "~D:~S~D:~S~D" 
+                                timer-hour
+                                (if (< timer-min 10) "0" "")
+                                timer-min
+                                (if (< timer-sec 10) "0" "")
+                                timer-sec)
+      (format (clear *ms-text*) "~D:~S~D" 
+                                timer-min 
+                                (if (< timer-sec 10) "0" "")  
+                                timer-sec)
       )
     )
   *ms-text*
@@ -750,11 +760,11 @@
               )
             (case *outrag-event-idx*
               ((0 1)
-                (format *next-section-str* "Connection ~D: ~D / ~D Orbs" 1 (the int (-> *game-info* money)) 169))
+                (format *next-section-str* "Connection ~D Progress: ~D / ~D Orbs" 1 (the int (-> *game-info* money)) 169))
               ;; ((11 12)
-              ;;   (format *next-section-str* "Connection ~D: ~D Orbs" (- *outrag-event-idx* 2) (-> e orb-count)))
+              ;;   (format *next-section-str* "Connection ~D Progress: ~D Orbs" (- *outrag-event-idx* 2) (-> e orb-count)))
               (else
-                (format *next-section-str* "Connection ~D: ~D / ~D Orbs" (+ (-> e conn-id) 1) (the int (-> *game-info* money)) (-> e orb-count)))
+                (format *next-section-str* "Connection ~D Progress: ~D / ~D Orbs" (+ (-> e conn-id) 1) (the int (-> *game-info* money)) (-> e orb-count)))
               )
             (draw-string-xy *next-section-str* buf 4 y (font-color white) (font-flags shadow kerning))
             )
