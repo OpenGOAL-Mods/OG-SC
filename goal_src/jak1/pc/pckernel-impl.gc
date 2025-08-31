@@ -135,9 +135,9 @@
   (set! (-> obj money-starburst?) #f)
   (set! (-> obj extra-hud?) #f)
   ;; original settings, minus 25 to be a bit more conservative
-  (set! (-> obj memcard-volume-sfx) 50.0)
+  (set! (-> obj memcard-volume-sfx) 40.0)
   (set! (-> obj memcard-volume-music) 40.0)
-  (set! (-> obj memcard-volume-dialog) 75.0)
+  (set! (-> obj memcard-volume-dialog) 100.0)
   (set! (-> obj memcard-vibration?) #f)
   (set! (-> obj memcard-play-hints?) #f)
   0)
