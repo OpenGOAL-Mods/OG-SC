@@ -65,11 +65,11 @@
       ;; 0 ;; skip dis duh
       50.0
       169.0
-      358.0
-      567.0
-      743.0
-      878.0
-      1127.0
+      372.0
+      581.0
+      757.0
+      892.0
+      1141.0
       1422.0
       1587.0
       1638.0
@@ -130,14 +130,14 @@
       :conn-id 0
       )
     (new 'static 'outrag-event
-      :orb-count 358
+      :orb-count 372
       :filename "outrag-342.mp3"
       :filename-sdc "outrag-342-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 1020)
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
-        21  ;; (village1 1)
+        35  ;; (village1 1)
         13  ;; (beach 2)
         0   ;; (jungle 3)
         0   ;; (misty 4)
@@ -156,14 +156,14 @@
       :conn-id 1
       )
     (new 'static 'outrag-event
-      :orb-count 567
+      :orb-count 581
       :filename "outrag-510.mp3"
       :filename-sdc "outrag-510-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 1440)
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
-        21  ;; (village1 1)
+        35  ;; (village1 1)
         13  ;; (beach 2)
         0   ;; (jungle 3)
         97  ;; (misty 4)
@@ -182,14 +182,14 @@
       :conn-id 2
       )
     (new 'static 'outrag-event
-      :orb-count 743
+      :orb-count 757
       :filename "outrag-639.mp3"
       :filename-sdc "outrag-639-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 1080)
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
-        21  ;; (village1 1)
+        35  ;; (village1 1)
         72  ;; (beach 2)
         0   ;; (jungle 3)
         97  ;; (misty 4)
@@ -208,14 +208,14 @@
       :conn-id 3
       )
     (new 'static 'outrag-event
-      :orb-count 878
+      :orb-count 892
       :filename "outrag-758.mp3"
       :filename-sdc "outrag-758-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 1020)
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
-        21  ;; (village1 1)
+        35  ;; (village1 1)
         72  ;; (beach 2)
         0   ;; (jungle 3)
         97  ;; (misty 4)
@@ -234,14 +234,14 @@
       :conn-id 4
       )
     (new 'static 'outrag-event
-      :orb-count 1127
+      :orb-count 1141
       :filename "outrag-1041.mp3"
       :filename-sdc "outrag-1041-SDC.mp3"
       :geyser-play? #t
       :sdc-time (seconds 1440)
       :level-orb-counts (new 'static 'array int 16
         50  ;; (training 0)
-        21  ;; (village1 1)
+        35  ;; (village1 1)
         136 ;; (beach 2)
         0   ;; (jungle 3)
         97  ;; (misty 4)
@@ -393,11 +393,11 @@
 
 (define *outrag-conn-counts* (new 'static 'array int 10
     169
-    358
-    567
-    743
-    878
-    1127
+    372
+    581
+    757
+    892
+    1141
     1422
     1587
     1638
@@ -407,11 +407,11 @@
 
 (define *outrag-conn-times* (new 'static 'array time-frame 10
     (seconds 780);; 169
-    (seconds 1020);; 358
-    (seconds 1440);; 567
-    (seconds 1080);; 743
-    (seconds 1020);; 878
-    (seconds 1440);; 1127
+    (seconds 1020);; 372
+    (seconds 1440);; 581
+    (seconds 1080);; 757
+    (seconds 1020);; 892
+    (seconds 1440);; 1141
     (seconds 2160);; 1422
     (seconds 1800);; 1587
     (seconds 600);; 1638
@@ -482,6 +482,7 @@
   (clear *conn-text*)
   (format *conn-text* "~S ~%" 
     (if *mod-hard-mode?* "SUPER DUPER CHARGED" "SUPER CHARGED"))
+  (format *conn-text* "~D ORBS~%" (the int (-> *game-info* money)))
   (format *conn-text* "~D DEATHS / RESETS" (-> *game-info* total-deaths))
 
   *conn-text*
