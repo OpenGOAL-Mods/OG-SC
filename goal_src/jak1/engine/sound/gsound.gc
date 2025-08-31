@@ -482,7 +482,7 @@
            (set! (-> spec pitch-mod) (-> this pitch))
            (set! (-> spec bend) 0)
            (set! (-> spec sound-name) (-> this name))
-           (set! (-> spec fo-max) (-> this falloff-far))
+           (set! (-> spec fo-max) 10) ;; mod change - ambient sounds only within 10m ;; (-> this falloff-far))
            (set! (-> spec mask) (sound-mask))
            (if (-> this params) (effect-param->sound-spec spec (-> this params) (-> this param-count))))
          (if (and (nonzero? (-> spec fo-max))
