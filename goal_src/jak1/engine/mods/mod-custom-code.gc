@@ -66,13 +66,13 @@
       50.0
       169.0
       375.0
-      584.0
-      759.0
-      894.0
-      1143.0
-      1422.0
-      1587.0
-      1638.0
+      598.0
+      809.0
+      944.0
+      1157.0
+      1436.0
+      1601.0
+      1652.0
       1980.0
       1983.0
       1986.0
@@ -156,7 +156,7 @@
       :conn-id 1
       )
     (new 'static 'outrag-event
-      :orb-count 584
+      :orb-count 598
       :filename "outrag-510.mp3"
       :filename-sdc "outrag-510-SDC.mp3"
       :geyser-play? #t
@@ -166,7 +166,7 @@
         37  ;; (village1 1)
         13  ;; (beach 2)
         0   ;; (jungle 3)
-        97  ;; (misty 4)
+        111 ;; (misty 4)
         0   ;; (firecanyon 5)
         48  ;; (village2 6)
         0   ;; (sunken 7)
@@ -182,7 +182,7 @@
       :conn-id 2
       )
     (new 'static 'outrag-event
-      :orb-count 759
+      :orb-count 809
       :filename "outrag-639.mp3"
       :filename-sdc "outrag-639-SDC.mp3"
       :geyser-play? #t
@@ -192,10 +192,10 @@
         37  ;; (village1 1)
         72  ;; (beach 2)
         0   ;; (jungle 3)
-        97  ;; (misty 4)
+        111 ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
-        57  ;; (sunken 7)
+        93  ;; (sunken 7)
         69  ;; (swamp 8)
         102 ;; (rolling 9)
         0   ;; (ogre 10)
@@ -208,7 +208,7 @@
       :conn-id 3
       )
     (new 'static 'outrag-event
-      :orb-count 894
+      :orb-count 944
       :filename "outrag-758.mp3"
       :filename-sdc "outrag-758-SDC.mp3"
       :geyser-play? #t
@@ -218,10 +218,10 @@
         37  ;; (village1 1)
         72  ;; (beach 2)
         0   ;; (jungle 3)
-        97  ;; (misty 4)
+        111 ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
-        57  ;; (sunken 7)
+        93  ;; (sunken 7)
         69  ;; (swamp 8)
         102 ;; (rolling 9)
         0   ;; (ogre 10)
@@ -234,7 +234,7 @@
       :conn-id 4
       )
     (new 'static 'outrag-event
-      :orb-count 1143
+      :orb-count 1157
       :filename "outrag-1041.mp3"
       :filename-sdc "outrag-1041-SDC.mp3"
       :geyser-play? #t
@@ -244,7 +244,7 @@
         37  ;; (village1 1)
         136 ;; (beach 2)
         0   ;; (jungle 3)
-        97  ;; (misty 4)
+        111 ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         111 ;; (sunken 7)
@@ -260,7 +260,7 @@
       :conn-id 5
       )
     (new 'static 'outrag-event
-      :orb-count 1422
+      :orb-count 1436
       :filename "outrag-1336.mp3"
       :filename-sdc "outrag-1336-SDC.mp3"
       :geyser-play? #t
@@ -270,7 +270,7 @@
         50  ;; (village1 1)
         136 ;; (beach 2)
         99  ;; (jungle 3)
-        97  ;; (misty 4)
+        111 ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         111 ;; (sunken 7)
@@ -286,7 +286,7 @@
       :conn-id 6
       )
     (new 'static 'outrag-event
-      :orb-count 1587
+      :orb-count 1601
       :filename "outrag-1580.mp3"
       :filename-sdc "outrag-1580-SDC.mp3"
       :geyser-play? #t
@@ -296,7 +296,7 @@
         50  ;; (village1 1)
         136 ;; (beach 2)
         99  ;; (jungle 3)
-        97  ;; (misty 4)
+        111 ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         164 ;; (sunken 7)
@@ -312,7 +312,7 @@
       :conn-id 7
       )
     (new 'static 'outrag-event
-      :orb-count 1638
+      :orb-count 1652
       :filename "outrag-1631(1).mp3"
       ;; :filename-sdc "outrag-1631(1)-SDC.mp3"
       :geyser-play? #f
@@ -322,7 +322,7 @@
         50  ;; (village1 1)
         136 ;; (beach 2)
         150 ;; (jungle 3)
-        97  ;; (misty 4)
+        111 ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         164 ;; (sunken 7)
@@ -338,7 +338,7 @@
       :conn-id 8
       )
     (new 'static 'outrag-event
-      :orb-count 1638
+      :orb-count 1652
       :filename "outrag-1631(2).mp3"
       :filename-sdc "outrag-1631(2)-SDC.mp3"
       :geyser-play? #t
@@ -348,7 +348,7 @@
         50  ;; (village1 1)
         136 ;; (beach 2)
         150 ;; (jungle 3)
-        97  ;; (misty 4)
+        111 ;; (misty 4)
         0   ;; (firecanyon 5)
         50  ;; (village2 6)
         164 ;; (sunken 7)
@@ -394,28 +394,28 @@
 (define *outrag-conn-counts* (new 'static 'array int 10
     169
     375
-    584
-    759
-    894
-    1143
-    1422
-    1587
-    1638
+    598
+    809
+    944
+    1157
+    1436
+    1601
+    1652
     2000
     )
   )
 
 (define *outrag-conn-times* (new 'static 'array time-frame 10
-    (seconds 780);; 169
+    (seconds 780) ;; 169
     (seconds 1020);; 375
-    (seconds 1440);; 584
-    (seconds 1080);; 759
-    (seconds 1020);; 894
-    (seconds 1440);; 1143
-    (seconds 2160);; 1422
-    (seconds 1800);; 1587
-    (seconds 600);; 1638
-    (seconds 0);; 2000
+    (seconds 1440);; 598
+    (seconds 1080);; 809
+    (seconds 1020);; 944
+    (seconds 1440);; 1157
+    (seconds 2160);; 1436
+    (seconds 1800);; 1601
+    (seconds 600) ;; 1652
+    (seconds 0)   ;; 2000
     )
   )
 
