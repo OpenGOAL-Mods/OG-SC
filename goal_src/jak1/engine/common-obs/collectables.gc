@@ -93,6 +93,14 @@
     (set! (-> this root root-prim local-sphere w) (* 2.5 (-> this root root-prim local-sphere w))))
   (none))
 
+(define-extern outrag-curr-conn (function int))
+
+(defenum eco-req-type
+  :type int32
+  (orb 0)   ;; eco spawns/despawns based on orb count
+  (conn 1)  ;; eco spawns/despawns based on active connection
+  )
+
 (deftype eco-collectable (collectable)
   ((eco-effect          sparticle-launch-group)
    (collect-effect      sparticle-launch-group)
@@ -105,8 +113,9 @@
    (suck-y-offset       float)
    (speed               vector :inline)
    (movie-pos-index     int32)
-   (spawn-orb-req       float)
-   (despawn-orb-req     float)
+   (req-type            eco-req-type)
+   (spawn-req           float)
+   (despawn-req         float)
    (block-func          (function eco-collectable symbol)))
   (:state-methods
    wait
@@ -126,8 +135,8 @@
   (logior! (-> this mask) (process-mask actor-pause))
   (set! (-> this actor-pause) #t)
   (set! (-> this notify-parent) #f)
-  (set! (-> this spawn-orb-req) 0.0)
-  (set! (-> this despawn-orb-req) 0.0)
+  (set! (-> this spawn-req) 0.0)
+  (set! (-> this despawn-req) 0.0)
   (set! (-> this block-func) (the-as (function eco-collectable symbol) false-func))
   (let ((s5-0 (new 'process 'collide-shape-moving this (collide-list-enum hit-by-player))))
     (set! (-> s5-0 dynam) (copy *standard-dynamics* 'process))
@@ -682,7 +691,7 @@
   (set! (-> this fact) (new 'process 'fact-info this (-> this pickup-type) (-> this pickup-amount)))
   this)
 
-(defbehavior eco-init-by-other eco-collectable ((arg1 vector) (ptype pickup-type) (spawn-orb-req float) (despawn-orb-req float))
+(defbehavior eco-init-by-other eco-collectable ((arg1 vector) (ptype pickup-type) (spawn-req float) (despawn-req float) (req-type eco-req-type))
   (set! (-> self pickup-amount) 1.0)
   (set! (-> self pickup-type) ptype)
   (initialize self)
@@ -702,26 +711,35 @@
   ;; (set! (-> self respawn-delay) (seconds 0.25)) ;; this would force respawn even if jak is channeling the same kind of eco
   (update-transforms! (-> self root))
   (set! (-> self event-hook) (-> (method-of-object self wait) event))
-  (set! (-> self spawn-orb-req) spawn-orb-req)
-  (set! (-> self despawn-orb-req) despawn-orb-req)
+  (set! (-> self req-type) req-type)
+  (set! (-> self spawn-req) spawn-req)
+  (set! (-> self despawn-req) despawn-req)
   (set! (-> self block-func)
-    (lambda ((arg0 eco-collectable))
+    (lambda ((arg0 eco-collectable))    
       (or (> (vector-vector-distance (target-pos 0) (-> arg0 root trans)) (meters 220)) ;; blocked if you too far away
-          (and (nonzero? (-> arg0 despawn-orb-req)) (>= (-> *game-info* money) (-> arg0 despawn-orb-req))) ;; blocked if nonzero despawn threshold met
-          (< (-> *game-info* money) (-> arg0 spawn-orb-req))))) ;; blocked if you didnt meet spawn threshold
+          (and (nonzero? (-> arg0 despawn-req))  ;; blocked if nonzero despawn threshold met
+               (or (and (= (-> arg0 req-type) (eco-req-type orb)) (>= (-> *game-info* money) (-> arg0 despawn-req)))
+                   (and (= (-> arg0 req-type) (eco-req-type conn)) (>= (+ (outrag-curr-conn) 1) (-> arg0 despawn-req)))
+                   )
+               )
+          ;; blocked if you didnt meet spawn threshold
+          (or (and (= (-> arg0 req-type) (eco-req-type orb)) (< (-> *game-info* money) (-> arg0 spawn-req)))
+              (and (= (-> arg0 req-type) (eco-req-type conn)) (< (+ (outrag-curr-conn) 1) (-> arg0 spawn-req)))
+              )
+          )))
   (if (logtest? (fact-options eco-blocked) (-> self fact options)) (go-virtual blocked))
   (if ((-> self block-func) self) (go-virtual blocked))
   (go-virtual wait)
   (none))
  
-(defbehavior eco-blue-init-by-other eco-blue ((arg1 vector) (spawn-orb-req float) (despawn-orb-req float))
-  (eco-init-by-other arg1 (pickup-type eco-blue) spawn-orb-req despawn-orb-req))
-(defbehavior eco-red-init-by-other eco-red ((arg1 vector) (spawn-orb-req float) (despawn-orb-req float))
-  (eco-init-by-other arg1 (pickup-type eco-red) spawn-orb-req despawn-orb-req))
-(defbehavior eco-green-init-by-other eco-green ((arg1 vector) (spawn-orb-req float) (despawn-orb-req float))
-  (eco-init-by-other arg1 (pickup-type eco-green) spawn-orb-req despawn-orb-req))
-(defbehavior eco-yellow-init-by-other eco-yellow ((arg1 vector) (spawn-orb-req float) (despawn-orb-req float))
-  (eco-init-by-other arg1 (pickup-type eco-yellow) spawn-orb-req despawn-orb-req))
+(defbehavior eco-blue-init-by-other eco-blue ((arg1 vector) (spawn-req float) (despawn-req float) (req-type eco-req-type))
+  (eco-init-by-other arg1 (pickup-type eco-blue) spawn-req despawn-req req-type))
+(defbehavior eco-red-init-by-other eco-red ((arg1 vector) (spawn-req float) (despawn-req float) (req-type eco-req-type))
+  (eco-init-by-other arg1 (pickup-type eco-red) spawn-req despawn-req req-type))
+(defbehavior eco-green-init-by-other eco-green ((arg1 vector) (spawn-req float) (despawn-req float) (req-type eco-req-type))
+  (eco-init-by-other arg1 (pickup-type eco-green) spawn-req despawn-req req-type))
+(defbehavior eco-yellow-init-by-other eco-yellow ((arg1 vector) (spawn-req float) (despawn-req float) (req-type eco-req-type))
+  (eco-init-by-other arg1 (pickup-type eco-yellow) spawn-req despawn-req req-type))
 
 
 (defskelgroup *money-sg*
@@ -1727,8 +1745,9 @@
    (blocker             entity-actor)
    (block-func          (function vent symbol))
    (pickup-handle       handle)
-   (spawn-orb-req       float)
-   (despawn-orb-req     float))
+   (req-type            eco-req-type)
+   (spawn-req           float)
+   (despawn-req         float))
   (:methods
    (initialize (_type_ entity-actor pickup-type) none))
   (:states
@@ -1916,7 +1935,7 @@
   (initialize this arg0 (pickup-type eco-green))
   (none))
 
-(defbehavior vent-init-by-other vent ((arg1 vector) (ptype pickup-type) (spawn-orb-req float) (despawn-orb-req float))
+(defbehavior vent-init-by-other vent ((arg1 vector) (ptype pickup-type) (spawn-req float) (despawn-req float) (req-type eco-req-type))
   (stack-size-set! (-> self main-thread) 128)
   (logior! (-> self mask) (process-mask actor-pause))
   (let ((s3-0 (new 'process 'collide-shape self (collide-list-enum hit-by-player))))
@@ -1933,8 +1952,9 @@
   (set! (-> self root pause-adjust-distance) 409600.0)
   (set! (-> self fact) (new 'process 'fact-info self ptype (-> *FACT-bank* eco-full-inc)))
   (set! (-> self block-func) (the-as (function vent symbol) false-func))
-  (set! (-> self spawn-orb-req) spawn-orb-req)
-  (set! (-> self despawn-orb-req) despawn-orb-req)
+  (set! (-> self req-type) req-type)
+  (set! (-> self spawn-req) spawn-req)
+  (set! (-> self despawn-req) despawn-req)
   (case (-> self fact pickup-type)
     (((pickup-type eco-blue))
      (set! (-> self part) (create-launch-control (-> *part-group-id-table* 44) self))
@@ -1962,8 +1982,16 @@
   (set! (-> self block-func)
         (lambda ((arg0 vent))
           (or (> (vector-vector-distance (target-pos 0) (-> arg0 root trans)) (meters 220)) ;; blocked if you too far away
-              (and (nonzero? (-> arg0 despawn-orb-req)) (>= (-> *game-info* money) (-> arg0 despawn-orb-req))) ;; blocked if nonzero despawn threshold met
-              (< (-> *game-info* money) (-> arg0 spawn-orb-req))))) ;; blocked if spawn threshold not met
+              (and (nonzero? (-> arg0 despawn-req))  ;; blocked if nonzero despawn threshold met
+                  (or (and (= (-> arg0 req-type) (eco-req-type orb)) (>= (-> *game-info* money) (-> arg0 despawn-req)))
+                      (and (= (-> arg0 req-type) (eco-req-type conn)) (>= (+ (outrag-curr-conn) 1) (-> arg0 despawn-req)))
+                      )
+                  )
+              ;; blocked if you didnt meet spawn threshold
+              (or (and (= (-> arg0 req-type) (eco-req-type orb)) (< (-> *game-info* money) (-> arg0 spawn-req)))
+                  (and (= (-> arg0 req-type) (eco-req-type conn)) (< (+ (outrag-curr-conn) 1) (-> arg0 spawn-req)))
+                  )
+            )))
   ;; )
   (set! (-> self show-particles) #t)
   (when (logtest? (-> self fact options) (fact-options vent-blocked))
@@ -1983,14 +2011,14 @@
   (go vent-wait-for-touch)
   )
 
-(defbehavior ventblue-init-by-other ventblue ((arg1 vector) (spawn-orb-req float) (despawn-orb-req float))
-  (vent-init-by-other arg1 (pickup-type eco-blue) spawn-orb-req despawn-orb-req))
-(defbehavior ventred-init-by-other ventred ((arg1 vector) (spawn-orb-req float) (despawn-orb-req float))
-  (vent-init-by-other arg1 (pickup-type eco-red) spawn-orb-req despawn-orb-req))
-(defbehavior ventgreen-init-by-other ventgreen ((arg1 vector) (spawn-orb-req float) (despawn-orb-req float))
-  (vent-init-by-other arg1 (pickup-type eco-green) spawn-orb-req despawn-orb-req))
-(defbehavior ventyellow-init-by-other ventyellow ((arg1 vector) (spawn-orb-req float) (despawn-orb-req float))
-  (vent-init-by-other arg1 (pickup-type eco-yellow) spawn-orb-req despawn-orb-req))
+(defbehavior ventblue-init-by-other ventblue ((arg1 vector) (spawn-req float) (despawn-req float) (req-type eco-req-type))
+  (vent-init-by-other arg1 (pickup-type eco-blue) spawn-req despawn-req req-type))
+(defbehavior ventred-init-by-other ventred ((arg1 vector) (spawn-req float) (despawn-req float) (req-type eco-req-type))
+  (vent-init-by-other arg1 (pickup-type eco-red) spawn-req despawn-req req-type))
+(defbehavior ventgreen-init-by-other ventgreen ((arg1 vector) (spawn-req float) (despawn-req float) (req-type eco-req-type))
+  (vent-init-by-other arg1 (pickup-type eco-green) spawn-req despawn-req req-type))
+(defbehavior ventyellow-init-by-other ventyellow ((arg1 vector) (spawn-req float) (despawn-req float) (req-type eco-req-type))
+  (vent-init-by-other arg1 (pickup-type eco-yellow) spawn-req despawn-req req-type))
 
 
 (deftype ecovent (vent) ())
