@@ -3137,6 +3137,7 @@
           (set! (-> font flags) (font-flags shadow kerning middle middle-vert large))
           ;; set scroll arrow sprite vertical position right now
           (set! (-> obj particles 32 init-pos y) (the float (* 2 (- y-off 20))))
+          (set! (-> obj particles 33 init-pos y) 412.0) ;; hack to unbreak this if you go to mod-stats and back
           ;; when scrolling we draw an extra line
           (cond
             ((progress-scrolling-down?)

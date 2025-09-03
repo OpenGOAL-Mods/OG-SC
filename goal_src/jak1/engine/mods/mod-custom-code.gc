@@ -391,6 +391,13 @@
       )
   )))
 
+(defun outrag-curr-conn ()
+  (if (< *outrag-event-idx* *outrag-event-max*)
+    (-> *outrag-events* *outrag-event-idx* conn-id)
+    10 ;; no crash
+    )
+  )
+
 (define *outrag-conn-counts* (new 'static 'array int 10
     169
     375
@@ -453,11 +460,11 @@
 (define *conn-text* (new 'global 'string 128 (the string #f)))
 (defun get-mod-stat-text ((want-idx int))
   (cond
-    ((> want-idx (-> *outrag-events* *outrag-event-idx* conn-id))
+    ((and (< *outrag-event-idx* *outrag-event-max*) (> want-idx (-> *outrag-events* *outrag-event-idx* conn-id)))
       ;; this is a connection we haven't reached yet
       (format (clear *conn-text*) "<  ~2LCONNECTION ~D~%???? / ???? ORBS~%" (+ want-idx 1))
       )
-    ((= want-idx (-> *outrag-events* *outrag-event-idx* conn-id))
+    ((and (< *outrag-event-idx* *outrag-event-max*) (= want-idx (-> *outrag-events* *outrag-event-idx* conn-id)))
       ;; this is the active connection
       (format (clear *conn-text*) "<  ~3LCONNECTION ~D~%~12L~D / ~D ORBS" (+ want-idx 1) (the int (-> *game-info* money)) (-> *outrag-conn-counts* want-idx))
       (format *conn-text* "~%~D DEATHS / RESETS" (-> *game-info* deaths-per-conn want-idx))
