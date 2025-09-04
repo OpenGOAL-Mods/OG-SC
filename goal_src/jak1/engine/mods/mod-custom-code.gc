@@ -338,7 +338,7 @@
       :conn-id 8
       )
     (new 'static 'outrag-event
-      :orb-count 1652
+      :orb-count 1654
       :filename "outrag-1631(2).mp3"
       :filename-sdc "outrag-1631(2)-SDC.mp3"
       :geyser-play? #t
@@ -346,7 +346,7 @@
       :level-orb-counts (new 'static 'array int 16 
         50  ;; (training 0)
         50  ;; (village1 1)
-        136 ;; (beach 2)
+        138 ;; (beach 2)
         150 ;; (jungle 3)
         111 ;; (misty 4)
         0   ;; (firecanyon 5)
