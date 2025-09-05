@@ -805,6 +805,8 @@
   (new-sdc-game #x3001)
   (press-for-hint #x3002)
   (mod-stats #x3003)
+  (sc-hint #x3004)
+  (sdc-hint #x3005)
   ;; GAME-TEXT-ID ENUM ENDS
   )
 

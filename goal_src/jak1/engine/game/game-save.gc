@@ -747,7 +747,13 @@
         (((game-save-elt outrag-idx)) (set! *outrag-event-idx* (the-as int (-> data user-uint64))))
         (((game-save-elt hard-mode-unlocked)) (set! *outrag-sdc-unlocked?* (nonzero? (the-as int (-> data user-uint64)))))
         (((game-save-elt hard-mode)) (set! *mod-hard-mode?* (nonzero? (the-as int (-> data user-uint64)))))
-        ;; (((game-save-elt sdc-section-start-time)) (format 0 "YO setting start time from savefile~%") (set! *outrag-section-started?* #t) (set! *outrag-section-remaining-time* (the-as time-frame (-> data user-uint64))))
+        (((game-save-elt sdc-section-start-time))
+          ;; only load this if we're actually loading from title screen and not just resetting savestate
+          ;; the save has to be in geyser anyway or else we will reset their game in SDC
+          (when (level-loaded? 'title)
+            ;; (format 0 "YO setting start time from savefile~%")
+            (set! *outrag-section-started?* #t)
+            (set! *outrag-section-remaining-time* (the-as time-frame (-> data user-uint64)))))
         (((game-save-elt death-time)) (set! (-> this death-time) (the-as time-frame (-> data user-uint64))))
         (((game-save-elt hit-time)) (set! (-> this hit-time) (the-as time-frame (-> data user-uint64))))
         (((game-save-elt fuel-cell-pickup-time))
@@ -946,6 +952,7 @@
                              2048))
                      (+ -1024.0 (-> *math-camera* hvdf-off z))
                      (-> *math-camera* hvdf-off w)))
+      (format 0 "flashing autosave icon~%")
       (spawn (-> self part) *zero-vector*)))
   (none))
 
@@ -1244,7 +1251,27 @@
            ;; Don't display the auto-save warning prompt ;; if speedrunning
           ;;  (when (= (-> *pc-settings* speedrunner-mode?) #f)
           ;;    (activate-progress *dproc* (progress-screen auto-save)))
-            )))))
+            ))
+        (('save)
+          ;; flash icon for a bit
+          (set! (-> self state-time) (-> *display* real-frame-counter))
+          (while (< (- (-> *display* real-frame-counter) (-> self state-time)) (seconds 0.5))
+            (if (> (-> self part matrix) 0)
+              (set-vector! (sprite-get-user-hvdf (-> self part matrix))
+                          1842.0
+                          (the float
+                                (+ (the int
+                                        (* 0.5
+                                          (- (* (if (= (get-aspect-ratio) 'aspect16x9) 370.0 360.0) (-> *video-parms* relative-y-scale))
+                                              (the float (-> *video-parms* screen-sy)))))
+                                  2048))
+                          (+ -1024.0 (-> *math-camera* hvdf-off z))
+                          (-> *math-camera* hvdf-off w)))
+            (spawn (-> self part) *zero-vector*)
+            (suspend))
+          )
+        (else 
+          (format 0 "some other mode ~A~%" (-> self mode))))))
 
 (defun auto-save-command ((arg0 symbol) (arg1 int) (arg2 int) (arg3 process-tree))
   (process-spawn auto-save arg0 arg3 arg1 arg2)

@@ -661,12 +661,44 @@
                 (process-spawn-function process
                   :name 'voice-proc
                   ;This lambda is our function
-                  (lambda :behavior process ((filename string))
+                  (lambda :behavior process ((filename string) (old-idx int))
                     (suspend-for (seconds 1.0)) ;; pause for a bit
                     (stop-all-sounds)
                     (play-sound-file filename (the int (-> *setting-control* default dialog-volume)))
+                    ;; show some text hints after event 1 voiceline finishes
+                    (when (= old-idx 1)
+                      (suspend-for (seconds 0.1))
+                      (while (is-sound-playing filename)
+                        (suspend))
+                      (let ((t (current-time)))
+                        (while (not (time-elapsed? t (seconds 5)))
+                          (when (and *target*
+                                    (not (paused?)))
+                            ;; try to show prompt
+                            (kill-current-level-hint '() '(sidekick voicebox ambient) 'exit)
+                            (level-hint-surpress!)
+                            (let ((gp-1 (new 'stack 'font-context *font-default-matrix* 32 140 0.0 (font-color default) (font-flags shadow kerning))))
+                              (let ((v1-57 gp-1)) (set! (-> v1-57 width) (the float 440)))
+                              (let ((v1-58 gp-1)) (set! (-> v1-58 height) (the float 60)))
+                              (let ((v1-59 gp-1)) (set! (-> v1-59 scale) 0.9))
+                              (set! (-> gp-1 flags) (font-flags shadow kerning middle-vert large))
+                              (cond
+                                (*mod-hard-mode?*
+                                  (print-game-text-scaled (lookup-text! *common-text* (text-id sdc-hint) #f) 0.75 gp-1 128)
+                                  )
+                                (else
+                                  (print-game-text-scaled (lookup-text! *common-text* (text-id sc-hint) #f) 0.75 gp-1 128)
+                                  )
+                                )
+                              )
+                            )
+                          (suspend)
+                          )
+                        )
+                      )
                     )
                   filename
+                  *outrag-event-idx*
                   )
                 )
               )
@@ -1096,7 +1128,7 @@
              (>= *outrag-event-idx* 2) ;; only after geyser sections
              (not (is-sound-playing "")) ;; wait for any sounds to finish
              (not (paused?))
-             (not (process-by-name 'voice-proc *active-pool*)) ;; voice line isnt pending/playing
+             (not (process-by-name 'voice-proc *active-pool*)) ;; voice line/text hint isnt pending/playing
              )
     ;; try to show prompt
     (kill-current-level-hint '() '(sidekick voicebox ambient) 'exit)
