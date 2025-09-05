@@ -795,7 +795,8 @@
 (define *orba-filename* "OBJPLACER-")
 
 (defun orbs-save-to-file ((filenum int))
-  (when (nonzero? (-> *orb-placer-count* *orb-placer-selected-level-idx*)) ;; dont accidentally overwrite w empty file
+  (when (and #f ;; release hack lol
+             (nonzero? (-> *orb-placer-count* *orb-placer-selected-level-idx*))) ;; dont accidentally overwrite w empty file
     (format (clear *pc-temp-string-1*) "~S/custom_assets/jak1/objects/~S~S.gc" *pc-jak-project-path* *orba-filename* (-> *orb-placer-lvl-names* filenum))
     (pc-mkdir-file-path *pc-temp-string-1*)
     (orbs-write-to-file *pc-temp-string-1*)
