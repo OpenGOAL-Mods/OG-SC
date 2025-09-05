@@ -275,8 +275,9 @@
              ;; mod change - if we loaded for some reason, we count that as death/reset (for this conn, if valid)
              (outrag-death-reset-counter)
              ;; mod change - hack to reset SDC files if loaded from title screen, to avoid cheesing timer
-             (when (and *mod-hard-mode?* (level-loaded? 'title))
+             (when (and *mod-hard-mode?* (level-loaded? 'title) (!= (-> arg3 level-index) 1))
               (initialize! *game-info* 'game (the-as game-save #f) "game-start")
+              (auto-save-command-default) ;; make sure this reset is saved over their file
               (return 0)
               )
              (set! arg2 (get-or-create-continue! *game-info*))
