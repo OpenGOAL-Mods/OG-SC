@@ -747,7 +747,13 @@
         (((game-save-elt outrag-idx)) (set! *outrag-event-idx* (the-as int (-> data user-uint64))))
         (((game-save-elt hard-mode-unlocked)) (set! *outrag-sdc-unlocked?* (nonzero? (the-as int (-> data user-uint64)))))
         (((game-save-elt hard-mode)) (set! *mod-hard-mode?* (nonzero? (the-as int (-> data user-uint64)))))
-        ;; (((game-save-elt sdc-section-start-time)) (format 0 "YO setting start time from savefile~%") (set! *outrag-section-started?* #t) (set! *outrag-section-remaining-time* (the-as time-frame (-> data user-uint64))))
+        (((game-save-elt sdc-section-start-time))
+          ;; only load this if we're actually loading from title screen and not just resetting savestate
+          ;; the save has to be in geyser anyway or else we will reset their game in SDC
+          (when (level-loaded? 'title)
+            ;; (format 0 "YO setting start time from savefile~%")
+            (set! *outrag-section-started?* #t)
+            (set! *outrag-section-remaining-time* (the-as time-frame (-> data user-uint64)))))
         (((game-save-elt death-time)) (set! (-> this death-time) (the-as time-frame (-> data user-uint64))))
         (((game-save-elt hit-time)) (set! (-> this hit-time) (the-as time-frame (-> data user-uint64))))
         (((game-save-elt fuel-cell-pickup-time))
