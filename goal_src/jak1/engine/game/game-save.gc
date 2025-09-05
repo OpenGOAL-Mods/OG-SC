@@ -155,6 +155,9 @@
    (load-from-file! (_type_ string) _type_)
    (debug-print (_type_ symbol) _type_)))
 
+(defun get-save-level-index ((this game-save))
+  (-> this level-index))
+
 (defmethod asize-of ((this game-save))
   "Get the size in memory of the save"
   (the-as int (+ (-> game-save size) (the-as uint (-> this allocated-length)))))
