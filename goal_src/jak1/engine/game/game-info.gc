@@ -158,6 +158,7 @@
 (define-extern orb-placer-autoload-clear! (function none))
 (define-extern auto-save-command-default (function none))
 (define-extern *next-unlock-req* float)
+(define-extern get-save-level-index (function game-save int))
 (defmethod initialize! ((this game-info) (cause symbol) (save-to-load game-save) (continue-point-override string))
   "Initialize the game-info.
     The cause can be 'dead if you die, or 'game to reset everything.
@@ -275,7 +276,7 @@
              ;; mod change - if we loaded for some reason, we count that as death/reset (for this conn, if valid)
              (outrag-death-reset-counter)
              ;; mod change - hack to reset SDC files if loaded from title screen, to avoid cheesing timer
-             (when (and *mod-hard-mode?* (level-loaded? 'title) (!= (-> arg3 level-index) 1))
+             (when (and *mod-hard-mode?* (level-loaded? 'title) (!= (get-save-level-index arg3) 1))
               (initialize! *game-info* 'game (the-as game-save #f) "game-start")
               (auto-save-command-default) ;; make sure this reset is saved over their file
               (return 0)
