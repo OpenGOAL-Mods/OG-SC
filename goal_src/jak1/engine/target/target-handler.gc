@@ -521,6 +521,9 @@
           )
         )
       )
+    (('die-bitch)
+      (go target-death 'damage)
+      )
     (('attack 'attack-or-shove 'attack-invinc)
      (target-attacked arg2
                       (the-as attack-info (-> arg3 param 1))

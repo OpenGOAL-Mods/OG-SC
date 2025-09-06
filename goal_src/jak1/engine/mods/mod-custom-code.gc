@@ -1113,13 +1113,24 @@
   (draw-unlock-info) ;; wont actually draw anymore
 
   ;; check if player should be dead but isn't
-  (when (and *target* 
-             (!= (-> *target* state name) 'target-grab)
-             (!= (-> *target* state name) 'target-hit)
-             (not (logtest? (-> *target* state-flags) (state-flags being-attacked dying)))
+  (when (and *target*
              (<= (-> *target* fact health) 0.0))
-    ;; (format 0 "killing player backup~%")
-    (send-event *target* 'attack-invinc #f (static-attack-info ((mode 'generic))))
+    (case (-> *target* next-state name) :comp name=
+      (('target-grab 'target-hit 'target-death 'target-flut-death 'target-racing-death 'target-tube-death)
+        ;; don't kill (yet)
+        )
+      (else
+        ;; kill - if already dead (zombie) then use the backup event, otherwise do an attack
+        (cond
+          ((logtest? (-> *target* state-flags) (state-flags dying))
+            (send-event *target* 'die-bitch)
+            )
+          (else
+            (send-event *target* 'attack-invinc #f (static-attack-info ((mode 'generic))))
+            )
+          )
+        )
+      )
     )
 
   ;; check if player is near geyser vent and wants a hint
