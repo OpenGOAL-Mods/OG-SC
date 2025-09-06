@@ -722,8 +722,11 @@
     (behavior ((arg0 symbol))
       (runs-on-jak-death 'dying) ;;mod-base-change
       (set! (-> self control unknown-uint20) (the-as uint #f))
-      (set! (-> self control unknown-int21)
-            (the-as int (send-event (handle->process (-> self attack-info attacker)) 'target 'die arg0)))
+      ;; prevent crash from killing jak from nowhere
+      (when (and (-> self attack-info attacker) (nonzero? (-> self attack-info attacker)))
+        (set! (-> self control unknown-int21)
+              (the-as int (send-event (handle->process (-> self attack-info attacker)) 'target 'die arg0)))
+        )
       (set! (-> self neck flex-blend) 0.0)
       (target-timed-invulnerable-off self)
       (set-setting! 'process-mask 'set 0.0 (process-mask enemy platform projectile death))
